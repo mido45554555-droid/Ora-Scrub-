@@ -1,0 +1,5 @@
+# Nothing in this project is served by Apache: the site is Next.js and
+# the API is Node.js. Because it sits under XAMPP's htdocs, block
+# Apache from exposing .env / .env.local (secrets) and backend/storage
+# (customer uploads, payment screenshots).
+Require all denied

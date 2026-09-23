@@ -1,0 +1,4 @@
+# This folder lives under XAMPP's htdocs, so Apache would otherwise
+# serve .env (secrets) and storage/ (customer uploads) to anyone who
+# asks. The backend is a Node.js app and never needs Apache.
+Require all denied

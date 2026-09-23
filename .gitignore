@@ -1,0 +1,25 @@
+# dependencies
+node_modules/
+
+# builds / caches
+.next/
+out/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# secrets — never commit (Gmail App Password, API key, DB password)
+.env
+.env.local
+.env*.local
+
+# customer uploads: payment screenshots and reference photos
+backend/storage/
+backend/test-storage/
+
+# misc
+.DS_Store
+Thumbs.db
+npm-debug.log*
+*.pem
+*.log

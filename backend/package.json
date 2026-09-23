@@ -1,0 +1,28 @@
+{
+  "name": "ora-scrubs-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Order intake and admin API for the ORA medical scrubs website.",
+  "type": "module",
+  "main": "src/server.js",
+  "engines": {
+    "node": ">=20.12"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "setup": "node scripts/setup.js",
+    "create-admin": "node scripts/create-admin.js",
+    "test": "node --test --test-concurrency=1 \"test/**/*.test.js\"",
+    "mail:test": "node scripts/test-email.js"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "helmet": "^8.3.0",
+    "multer": "^2.4.0",
+    "mysql2": "^3.24.4",
+    "nodemailer": "^10.0.10",
+    "zod": "^3.25.76"
+  }
+}

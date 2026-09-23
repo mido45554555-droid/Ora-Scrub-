@@ -1,0 +1,209 @@
+{
+  "brand": {
+    "name": "ORA",
+    "tagline": "Medical Scrubber"
+  },
+  "nav": {
+    "home": "Home",
+    "order": "Order",
+    "contact": "Contact",
+    "cta": "Start your order",
+    "menu": "Menu",
+    "closeMenu": "Close menu"
+  },
+  "language": {
+    "switchTo": "العربية"
+  },
+  "footer": {
+    "rights": "All rights reserved.",
+    "navHeading": "Navigate",
+    "contactHeading": "Contact",
+    "contactPlaceholder": "Contact details coming soon."
+  },
+  "placeholderPage": {
+    "comingSoon": "This page is coming soon."
+  },
+  "orderConfirmation": {
+    "title": "Order received",
+    "body": "Thank you — ORA has received your order details.",
+    "referenceLabel": "Order reference",
+    "missingReference": "We couldn't find an order reference. If you just submitted an order, please check your details and try again.",
+    "backToHome": "Back to home"
+  },
+  "contactPage": {
+    "title": "Contact"
+  },
+  "home": {
+    "hero": {
+      "headline": "Scrubs, made to your measurements.",
+      "subheadline": "Every ORA scrub is cut to your own measurements and finished in the color you choose.",
+      "primaryCta": "Start your order",
+      "secondaryCta": "Get in touch"
+    },
+    "value": {
+      "heading": "Made for the people who wear it every day.",
+      "body": "Doctors and nurses spend long hours in their scrubs. ORA builds each piece around your measurements and the color you request, so it fits the way you work and looks the way you want to be seen."
+    },
+    "showcase": {
+      "heading": "The ORA look.",
+      "body": "A closer look at ORA's scrub silhouettes.",
+      "note": "Every piece is available in a custom color you choose yourself — more on that below."
+    },
+    "customization": {
+      "heading": "Designed around you.",
+      "body": "Choose your shape, request any color by sending a reference image, and add any details you'd like your tailor to know.",
+      "points": {
+        "shape": "Choose your scrub shape and style",
+        "color": "Send a reference image for your exact color — not limited to a fixed list",
+        "details": "Add any additional modifications or details"
+      },
+      "cta": "Start your order"
+    },
+    "process": {
+      "heading": "How ordering works.",
+      "steps": {
+        "one": {
+          "title": "Share your details",
+          "body": "Submit your measurements and customization details."
+        },
+        "two": {
+          "title": "Upload your references",
+          "body": "Provide your required reference and payment images."
+        },
+        "three": {
+          "title": "ORA reviews your request",
+          "body": "We check your details before confirming."
+        },
+        "four": {
+          "title": "Order confirmed",
+          "body": "Your order is confirmed and processed."
+        }
+      }
+    },
+    "finalCta": {
+      "heading": "Ready for scrubs made your way?",
+      "primaryCta": "Start your order",
+      "secondaryCta": "Contact us"
+    }
+  },
+  "orderForm": {
+    "intro": {
+      "heading": "Start your order",
+      "body": "Share your measurements and customization details below. ORA will review your request before confirming the order."
+    },
+    "optionalLabel": "Optional",
+    "requiredLabel": "required",
+    "errors": {
+      "required": "This field is required.",
+      "notNumber": "Please enter a number.",
+      "min": "Must be at least {value}.",
+      "max": "Must be at most {value}.",
+      "tooShort": "Must be at least {value} characters.",
+      "tooLong": "Must be at most {value} characters.",
+      "phone": "Please enter a valid mobile number.",
+      "phoneEg": "An Egyptian mobile number is 11 digits (e.g. 01012345678), or 10 without the leading zero.",
+      "selectPayment": "Please choose a payment method.",
+      "fileRequired": "Please upload an image.",
+      "fileType": "Only JPG, PNG or WEBP images are accepted.",
+      "fileSize": "The image must be smaller than {value}MB.",
+      "tooManyFiles": "You can upload up to {value} images."
+    },
+    "sections": {
+      "customer": {
+        "title": "Customer information",
+        "description": "How we'll identify your order and reach you."
+      },
+      "measurements": {
+        "title": "Measurements",
+        "description": "All measurements in centimeters. If a tailor has already taken your measurements, you can upload photos of them below."
+      },
+      "customization": {
+        "title": "Scrub customization",
+        "description": "Tell us the shape and color you'd like. Color is not limited to a fixed list — upload a reference image showing the exact color you want."
+      },
+      "payment": {
+        "title": "Payment",
+        "description": "The full scrub value is paid in advance. A payment screenshot is required to confirm your order."
+      }
+    },
+    "fields": {
+      "fullName": { "label": "Full name" },
+      "mobileNumber": {
+        "label": "Mobile number",
+        "hint": "Choose your country, then type the number without the country code.",
+        "countryLabel": "Country code",
+        "placeholder": "1012345678"
+      },
+      "address": { "label": "Detailed address", "hint": "Street, building, floor, and any landmarks that help with delivery." },
+      "height": { "label": "Height (cm)" },
+      "weight": { "label": "Weight (kg)" },
+      "armLength": { "label": "Arm length (cm)" },
+      "shoulderCircumference": { "label": "Shoulder circumference (cm)" },
+      "blouseLength": { "label": "Blouse length (cm)" },
+      "trouserLength": { "label": "Trouser length, waist to foot (cm)" },
+      "hipCircumference": { "label": "Hip circumference (cm)" },
+      "waistCircumference": { "label": "Waist circumference (cm)" },
+      "chestCircumference": { "label": "Chest circumference (cm)" },
+      "thighCircumference": { "label": "Thigh circumference (cm)" },
+      "referencePhotos": {
+        "label": "Tailor measurement photos",
+        "hint": "Optional photos showing measurements taken by a tailor. Up to 4 images."
+      },
+      "shape": {
+        "label": "Scrub shape / model / design",
+        "hint": "Describe the shape, cut, or style you'd like."
+      },
+      "colorDescription": {
+        "label": "Color description",
+        "hint": "Optional — describe the color in your own words in addition to the reference image."
+      },
+      "colorReferenceImage": {
+        "label": "Color reference image",
+        "hint": "Required — upload an image showing the exact color you want."
+      },
+      "additionalDetails": {
+        "label": "Additional details",
+        "hint": "Any other modifications or notes for your tailor."
+      },
+      "designReferenceImages": {
+        "label": "Design reference images",
+        "hint": "Optional — up to 4 images showing the model, design, or modifications you'd like."
+      },
+      "paymentMethod": {
+        "legend": "Payment method",
+        "logoAlt": "{provider} logo",
+        "accountHolderLabel": "Account holder",
+        "accountDetailsLabel": "Payment details"
+      },
+      "vodafoneCash": "Vodafone Cash",
+      "instapay": "InstaPay",
+      "screenshot": {
+        "label": "Payment screenshot",
+        "hint": "Required — kept separate from your design and reference images."
+      }
+    },
+    "upload": {
+      "remove": "Remove {fileName}",
+      "tooLarge": "{fileName} is larger than 5MB and wasn't added.",
+      "wrongType": "{fileName} isn't a supported image type and wasn't added.",
+      "tooMany": "You can upload up to {max} images."
+    },
+    "submit": {
+      "button": "Submit order",
+      "submitting": "Sending your order…",
+      "validationSummary": "Some details need fixing — the fields in red below show what.",
+      "networkError": "We couldn't reach ORA. Please check your internet connection and try again — your details are still here.",
+      "rateLimited": "Too many attempts in a short time. Please wait a few minutes and try again.",
+      "serverError": "Something went wrong on our side and your order wasn't sent. Please try again in a moment."
+    },
+    "basket": {
+      "trigger": "Review order",
+      "title": "Your order so far",
+      "close": "Close",
+      "edit": "Edit",
+      "continueEditing": "Continue editing",
+      "emptyValue": "Not added yet"
+    }
+  }
+}
+

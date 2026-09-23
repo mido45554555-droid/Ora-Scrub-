@@ -1,0 +1,147 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   Design Tokens — Phase 2
+   ==========================================================================
+   COLOR: gold + cream are pixel-sampled directly from the official ORA
+   logo (k-means clustering on the source PNG, verified with an
+   exhaustive full-image scan). The logo contains no navy — confirmed
+   twice, most recently with a pixel-by-pixel hue scan across the whole
+   image. Per client decision, the palette proceeds as gold + cream only;
+   navy may be added later if a navy-inclusive brand asset is provided.
+
+   "Ink" (near-black neutral) below is NOT a brand color and is not
+   presented as one — it exists because body text needs a color darker
+   than the cream background for contrast/accessibility, which every
+   site needs regardless of brand palette. It is a functional choice,
+   flagged in the Phase 2 report as something to confirm, not a silent
+   assumption.
+
+   TYPOGRAPHY: see lib/fonts.ts. Direction-aware — [dir="rtl"] swaps the
+   font variables rather than duplicating any layout or component.
+   ========================================================================== */
+
+:root {
+  /* Gold — derived from logo pixels (k-means clusters, largest first) */
+  --color-gold-light: #e0c392;
+  --color-gold: #b6925e;
+  --color-gold-deep: #8a693d;
+  --color-gold-shadow: #593e1b;
+
+  /* Cream — logo's own background tone */
+  --color-cream: #eee4dd;
+  --color-cream-soft: #f4ece6;
+  --color-cream-white: #fbf8f5; /* subtle card/surface lift, still neutral */
+
+  /* Ink — functional neutral for text/contrast, NOT a brand color.
+     Pending confirmation — see Phase 2 report. */
+  --color-ink: #2b2621;
+  --color-ink-muted: rgba(43, 38, 33, 0.65);
+  --color-ink-faint: rgba(43, 38, 33, 0.4);
+
+  /* RGB-channel variables (space-separated) so Tailwind's bg-x/50 style
+     opacity modifiers work correctly via rgb(var(--x-rgb) / <alpha-value>)
+     — a plain var(--hex) string can't be combined with an opacity
+     modifier, so any token used with a "/NN" modifier needs one of these. */
+  --color-cream-soft-rgb: 244 236 230;
+  --color-ink-rgb: 43 38 33;
+
+  /* Error — functional, not a brand color: form validation must read as
+     an error at a glance, which the gold/cream palette can't express.
+     Warmed slightly towards the palette so it doesn't look pasted in. */
+  --color-error: #a8321f;
+  --color-error-strong: #7d2415;
+  --color-error-soft: #f7e7e1;
+
+  /* Field surfaces — a warm off-white lifted just off the cream page
+     (never plain #fff, which reads as a different design system), with
+     a gold-tinted edge so an empty field is visibly something to fill. */
+  --color-field: #fbf7f2;
+  --color-field-border: rgba(138, 105, 61, 0.4);
+
+  /* Borders / dividers — hairline, not heavy card borders */
+  --color-border: rgba(43, 38, 33, 0.12);
+  --color-border-gold: rgba(182, 146, 94, 0.35);
+
+  /* Typography — direction-aware via [dir], not duplicated layouts.
+     Fallback stacks kept generic; next/font supplies the real faces. */
+  --font-display: var(--font-display-en), ui-serif, Georgia, serif;
+  --font-body: var(--font-body-en), ui-sans-serif, system-ui, sans-serif;
+
+  /* Spacing scale — generous, editorial rhythm rather than dense SaaS
+     spacing. Base unit 4px. */
+  --space-3xs: 0.25rem;
+  --space-2xs: 0.5rem;
+  --space-xs: 0.75rem;
+  --space-sm: 1rem;
+  --space-md: 1.5rem;
+  --space-lg: 2.5rem;
+  --space-xl: 4rem;
+  --space-2xl: 6rem;
+  --space-3xl: 9rem;
+
+  /* Radius scale — deliberately restrained/near-square. Fashion-editorial
+     rather than bubbly SaaS. */
+  --radius-none: 0;
+  --radius-sm: 2px;
+  --radius-md: 3px;
+
+  /* Shadows — near-imperceptible. Prefer hairline borders over shadow
+     for elevation; shadow tokens exist for the rare case (e.g. an
+     uploaded image preview) that genuinely needs to lift off the page. */
+  --shadow-sm: 0 1px 2px rgba(43, 38, 33, 0.05);
+  --shadow-md: 0 4px 16px rgba(43, 38, 33, 0.06);
+
+  /* Motion — short, purposeful, never decorative-by-default. */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+}
+
+[dir='rtl'] {
+  --font-display: var(--font-display-ar), 'Traditional Arabic', serif;
+  --font-body: var(--font-body-ar), 'Segoe UI', sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+body {
+  background-color: var(--color-cream-soft);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+}
+
+/* Numeric fields (measurements) stay LTR even inside an RTL page —
+   numbers don't mirror regardless of the surrounding text direction. */
+.numeric-field {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/* Visible keyboard focus, independent of browser defaults. */
+:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 2px;
+}
