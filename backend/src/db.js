@@ -5,6 +5,11 @@ export const pool = mysql.createPool({
   ...config.db,
   connectionLimit: 10,
   waitForConnections: true,
+  // Under a flood, fail fast instead of queueing work forever: a
+  // request that waits minutes for a connection is worse than a clear
+  // error the customer can retry.
+  queueLimit: 100,
+  connectTimeout: 10_000,
   charset: 'utf8mb4',
   // Store and read DATETIME as UTC so timestamps don't shift with the
   // server's local timezone.

@@ -28,6 +28,8 @@ const envSchema = z.object({
   ADMIN_SESSION_HOURS: z.coerce.number().positive().max(24 * 30).default(12),
   ORDER_RATE_LIMIT: z.coerce.number().int().positive().default(5),
   ORDER_GLOBAL_RATE_LIMIT: z.coerce.number().int().positive().default(100),
+  // How many order uploads may be parsed at once (memory guard).
+  UPLOAD_CONCURRENCY: z.coerce.number().int().positive().max(64).default(4),
 
   // New-order email. All optional: if SMTP isn't configured, orders are
   // still saved and the email step is skipped with a warning.
@@ -69,6 +71,7 @@ function loadConfig() {
     adminSessionMs: env.ADMIN_SESSION_HOURS * 60 * 60 * 1000,
     orderRateLimit: env.ORDER_RATE_LIMIT,
     orderGlobalRateLimit: env.ORDER_GLOBAL_RATE_LIMIT,
+    uploadConcurrency: env.UPLOAD_CONCURRENCY,
     mail: {
       enabled: Boolean(env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS && env.ORDER_NOTIFY_TO),
       smtp: {

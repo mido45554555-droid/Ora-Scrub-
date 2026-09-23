@@ -2,7 +2,7 @@ import express from 'express';
 import helmet from 'helmet';
 import { pool } from './db.js';
 import { errorHandler, notFound } from './middleware/errors.js';
-import { noStore, requireInternalKey } from './middleware/security.js';
+import { healthLimiter, noStore, requireInternalKey } from './middleware/security.js';
 import { adminRouter } from './routes/admin.js';
 import { ordersRouter } from './routes/orders.js';
 
@@ -19,13 +19,21 @@ export function createApp() {
   app.use(noStore);
 
   // Unauthenticated liveness check; reveals nothing beyond up/down.
-  app.get('/api/health', async (_req, res) => {
-    try {
-      await pool.query('SELECT 1');
-      res.json({ status: 'ok' });
-    } catch {
-      res.status(503).json({ status: 'unavailable' });
+  // The database answer is cached briefly and the route is rate limited,
+  // so hammering this endpoint can't be turned into database load.
+  let health = { checkedAt: 0, ok: false };
+  const HEALTH_TTL_MS = 5000;
+
+  app.get('/api/health', healthLimiter, async (_req, res) => {
+    if (Date.now() - health.checkedAt > HEALTH_TTL_MS) {
+      try {
+        await pool.query('SELECT 1');
+        health = { checkedAt: Date.now(), ok: true };
+      } catch {
+        health = { checkedAt: Date.now(), ok: false };
+      }
     }
+    res.status(health.ok ? 200 : 503).json({ status: health.ok ? 'ok' : 'unavailable' });
   });
 
   app.use('/api', requireInternalKey);

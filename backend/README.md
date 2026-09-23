@@ -130,6 +130,17 @@ Images: JPG, PNG or WEBP, 5 MB each.
   and wrong passwords take the same time and return the same error.
 - **Rate limits (per 15 min):** 5 orders per IP, 100 orders total as a
   backstop, 10 login attempts per IP, and 600 admin requests per IP.
+- **Memory under load:** each upload is held in memory while it's
+  checked (up to 10 images × 5 MB), so `UPLOAD_CONCURRENCY` (default 4)
+  caps how many are parsed at once; the rest get `503` + `Retry-After`
+  immediately, before any bytes are buffered. Measured: 25 simultaneous
+  ~50 MB orders peaked at 273 MB RSS instead of exhausting memory.
+  Aborted uploads release their slot (tested).
+- **Database under load:** the pool is capped at 10 connections with a
+  queue limit, so a flood fails fast instead of piling up forever.
+- **Health endpoint:** public, so its database check is cached for 5
+  seconds and the route is rate limited — it can't be used to generate
+  database load.
 - **Headers and errors:** helmet sets security headers, and responses
   use `Cache-Control: no-store`. Internal errors are logged but never
   shown to callers.

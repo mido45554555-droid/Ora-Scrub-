@@ -164,6 +164,10 @@ export function OrderBasket({
         aria-modal="true"
         aria-labelledby="order-basket-title"
         tabIndex={-1}
+        // While closed the panel is only moved off-screen, so without
+        // this its inputs and buttons would still be reachable by Tab
+        // and announced by screen readers.
+        inert={!open}
         className={cn(
           'fixed inset-y-0 end-0 z-50 flex w-full max-w-md flex-col bg-cream-soft shadow-md transition-transform duration-base ease-standard',
           open ? 'translate-x-0' : 'translate-x-full rtl:-translate-x-full'

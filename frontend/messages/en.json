@@ -194,6 +194,7 @@
       "validationSummary": "Some details need fixing — the fields in red below show what.",
       "networkError": "We couldn't reach ORA. Please check your internet connection and try again — your details are still here.",
       "rateLimited": "Too many attempts in a short time. Please wait a few minutes and try again.",
+      "serverBusy": "We are receiving a lot of orders right now. Please wait a moment and send it again — your details are still here.",
       "serverError": "Something went wrong on our side and your order wasn't sent. Please try again in a moment."
     },
     "basket": {

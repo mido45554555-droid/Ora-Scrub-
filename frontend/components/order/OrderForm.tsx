@@ -196,6 +196,10 @@ export function OrderForm() {
       showInvalid(fields);
     } else if (response.status === 429) {
       showFailure(t('submit.rateLimited'));
+    } else if (response.status === 503) {
+      // The backend is at its upload capacity — a "try again shortly",
+      // not a failure the customer caused.
+      showFailure(t('submit.serverBusy'));
     } else {
       showFailure(t('submit.serverError'));
     }

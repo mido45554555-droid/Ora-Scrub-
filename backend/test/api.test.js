@@ -30,6 +30,8 @@ const { notifyOrder, runNotificationSweep, setMailTransportForTesting } = await 
   '../src/services/notifier.js'
 );
 const { buildOrderEmail, MAX_ATTACHMENT_BYTES } = await import('../src/services/orderEmail.js');
+const { limitConcurrentUploads } = await import('../src/middleware/security.js');
+const { EventEmitter } = await import('node:events');
 
 async function waitFor(check, timeoutMs = 5000) {
   const deadline = Date.now() + timeoutMs;
@@ -510,6 +512,48 @@ describe('new-order email', () => {
     assert.equal(images[0].filename, 'payment-screenshot.jpg');
     assert.equal(images[1].filename, 'color-reference.jpg');
     assert.match(email.html, /لم تُرفق/, 'says some images were left on the server');
+  });
+});
+
+describe('upload memory guard', () => {
+  // Each upload is buffered in memory while it is checked, so only a
+  // few may run at once; the rest are turned away with 503 instead of
+  // being allowed to exhaust the server's memory.
+  const fakeRes = () => Object.assign(new EventEmitter(), { set: () => {} });
+
+  test('refuses uploads over the limit and frees the slot afterwards', () => {
+    const guard = limitConcurrentUploads(2);
+    const calls = [];
+    const run = (res) => guard({}, res, (error) => calls.push(error));
+
+    const first = fakeRes();
+    const second = fakeRes();
+    run(first);
+    run(second);
+    assert.deepEqual(calls, [undefined, undefined], 'both allowed through');
+
+    const third = fakeRes();
+    run(third);
+    assert.equal(calls[2]?.status, 503);
+    assert.equal(calls[2]?.code, 'SERVER_BUSY');
+
+    // A finished (or aborted) response releases its slot.
+    first.emit('close');
+    run(fakeRes());
+    assert.equal(calls[3], undefined);
+  });
+
+  test('a slot is released only once per request', () => {
+    const guard = limitConcurrentUploads(1);
+    const calls = [];
+    const res = fakeRes();
+    guard({}, res, (error) => calls.push(error));
+    res.emit('close');
+    res.emit('close');
+    guard({}, fakeRes(), (error) => calls.push(error));
+    guard({}, fakeRes(), (error) => calls.push(error));
+    assert.equal(calls[1], undefined, 'next request allowed');
+    assert.equal(calls[2]?.status, 503, 'double close did not free an extra slot');
   });
 });
 

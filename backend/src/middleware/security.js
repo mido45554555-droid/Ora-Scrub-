@@ -65,11 +65,55 @@ export const loginLimiter = limiter({
   message: 'Too many login attempts. Please try again later.',
 });
 
+// Public and unauthenticated, so it is keyed by socket address rather
+// than the proxy-supplied client IP.
+export const healthLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 600,
+  standardHeaders: false,
+  legacyHeaders: false,
+  handler: (_req, res) => res.status(429).json({ status: 'rate_limited' }),
+});
+
 export const adminLimiter = limiter({
   windowMinutes: 15,
   limit: 600,
   message: 'Too many requests. Please slow down.',
 });
+
+/**
+ * Caps how many uploads are parsed at the same time.
+ *
+ * Each order is held in memory while it's checked (up to 10 images x
+ * 5 MB), so without this, enough simultaneous uploads would exhaust the
+ * server's memory even though every other limit is respected. Requests
+ * over the cap are refused immediately — before any bytes are buffered —
+ * with 503 and Retry-After, which is a normal "come back in a moment",
+ * not a lost order.
+ */
+export function limitConcurrentUploads(max) {
+  let inFlight = 0;
+
+  return (req, res, next) => {
+    if (inFlight >= max) {
+      res.set('Retry-After', '10');
+      next(new HttpError(503, 'SERVER_BUSY', 'The server is busy right now. Please try again in a moment.'));
+      return;
+    }
+
+    inFlight += 1;
+    let released = false;
+    // 'close' covers both a finished response and a client that
+    // disconnected mid-upload, so the slot is never leaked.
+    res.once('close', () => {
+      if (!released) {
+        released = true;
+        inFlight -= 1;
+      }
+    });
+    next();
+  };
+}
 
 /** Requires `Authorization: Bearer <session token>` from /api/admin/login. */
 export async function requireAdmin(req, _res, next) {
