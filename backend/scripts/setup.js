@@ -86,6 +86,7 @@ try {
   // (Checked via information_schema because MySQL, unlike MariaDB, has
   // no ADD COLUMN IF NOT EXISTS.)
   const addedColumns = [
+    ['orders', 'material', "ENUM('rosaline','angelica') NOT NULL AFTER shape"],
     ['orders', 'notified_at', 'DATETIME NULL AFTER client_ip'],
     ['orders', 'notify_attempts', 'TINYINT UNSIGNED NOT NULL DEFAULT 0 AFTER notified_at'],
     ['orders', 'notify_locked_until', 'DATETIME NULL AFTER notify_attempts'],
