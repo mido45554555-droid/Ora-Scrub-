@@ -204,9 +204,21 @@ export function findCountry(iso: string): Country | undefined {
   return COUNTRIES.find((country) => country.iso === iso);
 }
 
-/** 🇪🇬 from "EG" — regional indicator letters, no image needed. */
+/**
+ * Regional indicator emoji for a two-letter ISO country code, e.g. "EG" -> "🇪🇬".
+ * Uses the standard Unicode flag formula: 127462 + (A..Z offset), not a custom
+ * offset that can drift across regions or produce mismatched output.
+ */
 export function flagEmoji(iso: string): string {
-  return String.fromCodePoint(...[...iso.toUpperCase()].map((c) => 0x1f1a5 + c.charCodeAt(0)));
+  const normalized = iso?.trim().toUpperCase();
+  if (!normalized || !/^[A-Z]{2}$/.test(normalized)) {
+    return '';
+  }
+
+  const regionalIndicatorOffset = 0x1f1e6 - 'A'.charCodeAt(0);
+  return String.fromCodePoint(
+    ...[...normalized].map((character) => character.charCodeAt(0) + regionalIndicatorOffset)
+  );
 }
 
 /** Digits only, and for Egypt the leading 0 is dropped (0100… → 100…). */

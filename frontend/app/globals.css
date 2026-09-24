@@ -33,7 +33,8 @@
   /* Cream — logo's own background tone */
   --color-cream: #eee4dd;
   --color-cream-soft: #f4ece6;
-  --color-cream-white: #fbf8f5; /* subtle card/surface lift, still neutral */
+  --color-cream-white: #fbf8f5;
+  /* subtle card/surface lift, still neutral */
 
   /* Ink — functional neutral for text/contrast, NOT a brand color.
      Pending confirmation — see Phase 2 report. */
@@ -113,6 +114,7 @@ html {
   html {
     scroll-behavior: auto;
   }
+
   *,
   *::before,
   *::after {
@@ -129,7 +131,10 @@ body {
   font-family: var(--font-body);
 }
 
-h1, h2, h3, h4 {
+h1,
+h2,
+h3,
+h4 {
   font-family: var(--font-display);
 }
 
@@ -138,6 +143,21 @@ h1, h2, h3, h4 {
 .numeric-field {
   direction: ltr;
   unicode-bidi: isolate;
+}
+
+[data-order-form] input,
+[data-order-form] textarea,
+[data-order-form] select {
+  border-width: 1.5px !important;
+  border-color: rgba(182, 146, 94, 0.7) !important;
+  box-shadow: none !important;
+}
+
+[data-order-form] input:focus,
+[data-order-form] textarea:focus,
+[data-order-form] select:focus {
+  border-color: var(--color-gold) !important;
+  box-shadow: 0 0 0 2px rgba(182, 146, 94, 0.2) !important;
 }
 
 /* Visible keyboard focus, independent of browser defaults. */

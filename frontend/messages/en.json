@@ -127,24 +127,49 @@
       }
     },
     "fields": {
-      "fullName": { "label": "Full name" },
+      "fullName": {
+        "label": "Full name"
+      },
       "mobileNumber": {
         "label": "Mobile number",
         "hint": "Choose your country, then type the number without the country code.",
         "countryLabel": "Country code",
         "placeholder": "1012345678"
       },
-      "address": { "label": "Detailed address", "hint": "Street, building, floor, and any landmarks that help with delivery." },
-      "height": { "label": "Height (cm)" },
-      "weight": { "label": "Weight (kg)" },
-      "armLength": { "label": "Arm length (cm)" },
-      "shoulderCircumference": { "label": "Shoulder circumference (cm)" },
-      "blouseLength": { "label": "Blouse length (cm)" },
-      "trouserLength": { "label": "Trouser length, waist to foot (cm)" },
-      "hipCircumference": { "label": "Hip circumference (cm)" },
-      "waistCircumference": { "label": "Waist circumference (cm)" },
-      "chestCircumference": { "label": "Chest circumference (cm)" },
-      "thighCircumference": { "label": "Thigh circumference (cm)" },
+      "address": {
+        "label": "Detailed address",
+        "hint": "Street, building, floor, and any landmarks that help with delivery."
+      },
+      "height": {
+        "label": "Height (cm)"
+      },
+      "weight": {
+        "label": "Weight (kg)"
+      },
+      "armLength": {
+        "label": "Arm length (cm)"
+      },
+      "shoulderCircumference": {
+        "label": "Shoulder circumference (cm)"
+      },
+      "blouseLength": {
+        "label": "Blouse length (cm)"
+      },
+      "trouserLength": {
+        "label": "Trouser length, waist to foot (cm)"
+      },
+      "hipCircumference": {
+        "label": "Hip circumference (cm)"
+      },
+      "waistCircumference": {
+        "label": "Waist circumference (cm)"
+      },
+      "chestCircumference": {
+        "label": "Chest circumference (cm)"
+      },
+      "thighCircumference": {
+        "label": "Thigh circumference (cm)"
+      },
       "referencePhotos": {
         "label": "Tailor measurement photos",
         "hint": "Optional photos showing measurements taken by a tailor. Up to 4 images."
@@ -153,9 +178,15 @@
         "label": "Scrub shape / model / design",
         "hint": "Describe the shape, cut, or style you'd like."
       },
+      "material": {
+        "label": "Material type",
+        "hint": "Choose the material type for your scrub.",
+        "rosaline": "Rosaline",
+        "angelica": "Angelica"
+      },
       "colorDescription": {
         "label": "Color description",
-        "hint": "Optional — describe the color in your own words in addition to the reference image."
+        "hint": "Required — describe the color in your own words and match it to the reference image."
       },
       "colorReferenceImage": {
         "label": "Color reference image",
@@ -207,4 +238,3 @@
     }
   }
 }
-

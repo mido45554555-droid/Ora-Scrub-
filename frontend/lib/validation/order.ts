@@ -85,7 +85,10 @@ export const measurementsSchema = z.object({
 
 export const scrubCustomizationSchema = z.object({
   shape: z.string().trim().min(2, code('tooShort', 2)),
-  colorDescription: z.string().trim().optional(),
+  material: z.enum(['rosaline', 'angelica'], {
+    errorMap: () => ({ message: code('required') }),
+  }),
+  colorDescription: z.string().trim().min(2, code('tooShort', 2)),
   colorReferenceImage: requiredFileSchema(),
   additionalDetails: z.string().trim().optional(),
   designReferenceImages: optionalImageArraySchema,

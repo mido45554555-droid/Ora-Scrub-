@@ -106,6 +106,7 @@ function toOrderDetail(row, files) {
     },
     customization: {
       shape: row.shape,
+      material: row.material,
       colorDescription: row.color_description,
       additionalDetails: row.additional_details,
     },

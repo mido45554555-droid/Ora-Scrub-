@@ -12,6 +12,7 @@ import { OrderBasket } from './OrderBasket';
 import {
   createInitialOrderFormState,
   type RawOrderFormState,
+  type RawScrubCustomization,
 } from '@/lib/order/formState';
 import { orderFormSchema, flattenZodErrors } from '@/lib/validation/order';
 import { translateErrors } from '@/lib/validation/errorText';
@@ -36,7 +37,10 @@ function buildOrderFormData(values: RawOrderFormState, locale: string): FormData
         mobileDial: findCountry(values.customer.mobileCountry)?.dial ?? '',
       },
       measurements,
-      customization,
+      customization: {
+        ...customization,
+        material: values.customization.material,
+      },
       payment: { method: values.payment.method },
     })
   );
@@ -97,6 +101,13 @@ export function OrderForm() {
     setValues((prev) => ({
       ...prev,
       customization: { ...prev.customization, [field]: value },
+    }));
+  }
+
+  function updateMaterial(material: RawScrubCustomization['material']) {
+    setValues((prev) => ({
+      ...prev,
+      customization: { ...prev.customization, material },
     }));
   }
 
@@ -206,7 +217,7 @@ export function OrderForm() {
   }
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit} noValidate>
+    <form ref={formRef} onSubmit={handleSubmit} noValidate data-order-form>
       <div ref={formTopRef} />
 
       {submitState === 'invalid' && (
@@ -244,6 +255,7 @@ export function OrderForm() {
         values={values.customization}
         errors={errors}
         onTextChange={updateCustomizationText}
+        onMaterialChange={updateMaterial}
         onColorImageChange={updateColorImage}
         onDesignImagesChange={updateDesignImages}
       />

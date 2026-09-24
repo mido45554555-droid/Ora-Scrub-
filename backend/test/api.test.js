@@ -73,7 +73,12 @@ function validData(overrides = {}) {
       chestCircumference: '90',
       thighCircumference: '55',
     },
-    customization: { shape: 'V-neck, straight trousers', colorDescription: '', additionalDetails: 'Two pockets' },
+    customization: {
+      shape: 'V-neck, straight trousers',
+      material: 'rosaline',
+      colorDescription: 'Soft ivory with a slightly warm tone',
+      additionalDetails: 'Two pockets',
+    },
     payment: { method: 'instapay' },
     ...overrides,
   };
@@ -161,7 +166,8 @@ describe('order submission', () => {
     assert.equal(order.full_name, 'منى أحمد');
     assert.equal(order.mobile_number, '+20 1001234567', 'stored in one international format, leading 0 dropped');
     assert.equal(order.weight_kg, 62.5);
-    assert.equal(order.color_description, null, 'empty optional text is stored as NULL');
+    assert.equal(order.material, 'rosaline');
+    assert.equal(order.color_description, 'Soft ivory with a slightly warm tone');
     assert.equal(order.status, 'pending_review');
     assert.equal(order.locale, 'ar');
     assert.equal(order.client_ip, '203.0.113.10');
@@ -485,6 +491,23 @@ describe('new-order email', () => {
     assert.equal(sent.filter((m) => m.subject.includes(orderReference)).length, 2, 'original + one resend');
   });
 
+  test('email includes a human-readable fabric type label', () => {
+    const order = {
+      reference: 'ORA-260921-AAAAAA',
+      full_name: 'A',
+      created_at: new Date(),
+      payment_method: 'instapay',
+      locale: 'ar',
+      material: 'rosaline',
+      shape: 'Straight fit',
+      color_description: 'Ivory',
+      additional_details: 'N/A',
+    };
+    const email = buildOrderEmail(order, [], () => '');
+    assert.match(email.html, /بروزالين/);
+    assert.match(email.text, /بروزالين/);
+  });
+
   test('attachments stay under the email size limit, payment screenshot first', () => {
     const file = (kind, i) => ({
       kind,
@@ -519,7 +542,7 @@ describe('upload memory guard', () => {
   // Each upload is buffered in memory while it is checked, so only a
   // few may run at once; the rest are turned away with 503 instead of
   // being allowed to exhaust the server's memory.
-  const fakeRes = () => Object.assign(new EventEmitter(), { set: () => {} });
+  const fakeRes = () => Object.assign(new EventEmitter(), { set: () => { } });
 
   test('refuses uploads over the limit and frees the slot afterwards', () => {
     const guard = limitConcurrentUploads(2);

@@ -31,9 +31,11 @@ export function fieldIds(fieldId: string, hint?: string, error?: string) {
 /** Border/background of a text input, select or textarea. */
 export function controlClasses(error?: string) {
   return cn(
-    'w-full rounded border bg-field px-3 py-2.5 text-ink outline-none transition-colors duration-base ease-standard placeholder:text-ink-faint',
+    'block w-full min-h-[44px] appearance-none rounded border border-[1.5px] bg-field px-3 py-2.5 text-base text-ink shadow-none outline-none transition-colors duration-base ease-standard placeholder:text-ink-faint',
+    'disabled:cursor-not-allowed disabled:bg-cream-soft disabled:text-ink-muted',
     'focus:border-gold focus:ring-2 focus:ring-gold/30',
-    error ? 'border-error bg-error-soft focus:border-error focus:ring-error/25' : 'border-field'
+    'selection:bg-gold/20',
+    error ? 'border-error bg-error-soft focus:border-error focus:ring-error/25' : 'border-gold/40'
   );
 }
 

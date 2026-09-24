@@ -10,12 +10,18 @@ export interface LocalizedOption {
 }
 
 /**
- * Material type choices — intentionally empty. The client will provide
- * the actual material list later; until then the field should render as
- * hidden or disabled in the order form (decide which when the form is
- * built), never with invented material names.
+ * Material type choices for the scrub order form.
  */
-export const MATERIAL_OPTIONS: LocalizedOption[] = [];
+export const MATERIAL_OPTIONS: LocalizedOption[] = [
+  {
+    value: 'rosaline',
+    label: { en: 'Rosaline', ar: 'Rosaline' },
+  },
+  {
+    value: 'angelica',
+    label: { en: 'Angelica', ar: 'Angelica' },
+  },
+];
 
 /**
  * Scrub shape/model choices — also pending. Not yet provided by the
@@ -31,8 +37,8 @@ export const SCRUB_SHAPE_OPTIONS: LocalizedOption[] = [];
  * else needs to change (the payment UI reads from PAYMENT_ACCOUNTS,
  * never hardcodes a number itself).
  */
-export const VODAFONE_CASH_NUMBER = '01xxxxxxxxx'; // TODO: replace with the real Vodafone Cash number
-export const INSTAPAY_ACCOUNT = 'ora@instapay'; // TODO: replace with the real InstaPay account/details
+export const VODAFONE_CASH_NUMBER = '01063449096'; // TODO: replace with the real Vodafone Cash number
+export const INSTAPAY_ACCOUNT = '01018221386'; // TODO: replace with the real InstaPay account/details
 
 export interface PaymentAccountConfig {
   /** Account holder name exactly as it should be displayed to the customer. */

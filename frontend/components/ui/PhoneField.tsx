@@ -51,10 +51,14 @@ export function PhoneField({
     } catch {
       displayNames = undefined;
     }
+
+    // Keep the source order stable so SSR and client hydration render the
+    // same list. Sorting by localized region names makes the DOM order depend
+    // on runtime locale data and can flip between server and client.
     return COUNTRIES.map((entry) => ({
       ...entry,
       name: displayNames?.of(entry.iso) ?? entry.iso,
-    })).sort((a, b) => a.name.localeCompare(b.name, locale));
+    }));
   }, [locale]);
 
   const selected = findCountry(country);
@@ -79,7 +83,10 @@ export function PhoneField({
             aria-label={countryLabel}
             value={country}
             onChange={(e) => onCountryChange(e.target.value)}
-            className={cn(controlClasses(error), 'h-full w-full cursor-pointer appearance-none px-2 text-transparent')}
+            className={cn(
+              controlClasses(error),
+              'h-full w-full cursor-pointer px-2 text-transparent'
+            )}
           >
             {options.map((entry) => (
               // Colors set inline (not inherited): the closed control's

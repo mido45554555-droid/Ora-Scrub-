@@ -21,6 +21,15 @@ const LOGO_CID = 'ora-logo';
 
 const PAYMENT_METHODS = { vodafone_cash: 'فودافون كاش', instapay: 'إنستاباي' };
 const LOCALES = { ar: 'العربية', en: 'English' };
+const MATERIAL_LABELS = {
+  rosaline: 'بروزالين',
+  angelica: 'أنجيليكا',
+};
+
+function formatMaterial(material) {
+  if (!material) return '—';
+  return MATERIAL_LABELS[material] ?? material;
+}
 
 // Attached in this order, so the payment screenshot is never the one
 // dropped when the size cap is reached.
@@ -170,6 +179,7 @@ export function buildOrderEmail(order, files, readFile) {
   ];
   const customizationRows = [
     ['الشكل / الموديل', order.shape],
+    ['نوع القماش', formatMaterial(order.material)],
     ['وصف اللون', order.color_description || '—'],
     ['تفاصيل إضافية', order.additional_details || '—'],
   ];
@@ -268,14 +278,13 @@ export function buildOrderEmail(order, files, readFile) {
 
         ${sectionTitle('الصور المرفقة')}
         ${detailTable(fileSummary.length ? fileSummary : [['—', 'لا توجد صور']])}
-        ${
-          skipped.length
-            ? `<tr><td style="padding:10px 24px 0">
+        ${skipped.length
+      ? `<tr><td style="padding:10px 24px 0">
                  <div style="padding:10px 14px;background:${C.creamSoft};border-inline-start:3px solid ${C.gold};font-family:Tahoma,Arial,sans-serif;font-size:12px;color:${C.ink}">
                    ${skipped.length} صورة لم تُرفق لأن حجم الإيميل كبير — موجودة على السيرفر في فولدر الطلب.
                  </div></td></tr>`
-            : ''
-        }
+      : ''
+    }
 
         <tr>
           <td style="padding:22px 24px 26px;font-family:Tahoma,Arial,sans-serif;font-size:11px;color:${C.muted}">

@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS orders (
   thigh_circumference    DECIMAL(5,1) NOT NULL,
 
   shape                  VARCHAR(1000) NOT NULL,
+  material               ENUM('rosaline','angelica') NOT NULL,
   color_description      VARCHAR(1000) NULL,
   additional_details     VARCHAR(2000) NULL,
 

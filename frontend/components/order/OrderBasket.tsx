@@ -291,6 +291,14 @@ export function OrderBasket({
             <div className="mt-4 flex flex-col gap-4">
               {summaryRow(tf('shape.label'), values.customization.shape)}
               {summaryRow(
+                tf('material.label'),
+                values.customization.material
+                  ? values.customization.material === 'rosaline'
+                    ? tf('material.rosaline')
+                    : tf('material.angelica')
+                  : t('emptyValue')
+              )}
+              {summaryRow(
                 tf('colorDescription.label'),
                 values.customization.colorDescription
               )}

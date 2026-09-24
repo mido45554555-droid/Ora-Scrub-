@@ -126,9 +126,9 @@ export function FileUploadField({
           aria-describedby={[hintId, errorId].filter(Boolean).join(' ') || undefined}
           aria-invalid={Boolean(error)}
           className={cn(
-            'w-full cursor-pointer rounded border bg-field p-2 text-sm text-ink-muted',
+            'w-full cursor-pointer rounded border border-[1.5px] bg-field p-2 text-sm text-ink-muted',
             'file:me-4 file:cursor-pointer file:rounded file:border-0 file:bg-ink file:px-4 file:py-2 file:text-sm file:font-medium file:text-cream-soft file:transition-colors file:duration-base file:ease-standard hover:file:bg-gold-shadow',
-            error ? 'border-error bg-error-soft' : 'border-field'
+            error ? 'border-error bg-error-soft' : 'border-gold/40'
           )}
         />
       )}

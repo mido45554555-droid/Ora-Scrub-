@@ -33,6 +33,7 @@ export interface RawMeasurements {
 
 export interface RawScrubCustomization {
   shape: string;
+  material: 'rosaline' | 'angelica' | '';
   colorDescription: string;
   colorReferenceImage: File | null;
   additionalDetails: string;
@@ -74,6 +75,7 @@ export function createInitialOrderFormState(): RawOrderFormState {
     },
     customization: {
       shape: '',
+      material: '',
       colorDescription: '',
       colorReferenceImage: null,
       additionalDetails: '',

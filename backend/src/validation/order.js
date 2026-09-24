@@ -113,7 +113,10 @@ export const orderDataSchema = z.object({
   }),
   customization: z.object({
     shape: text(1000).pipe(z.string().min(2, code('tooShort', 2))),
-    colorDescription: optionalText(1000),
+    material: z.enum(['rosaline', 'angelica'], {
+      errorMap: () => ({ message: code('required') }),
+    }),
+    colorDescription: text(1000).pipe(z.string().min(2, code('tooShort', 2))),
     additionalDetails: optionalText(2000),
   }),
   payment: z.object({

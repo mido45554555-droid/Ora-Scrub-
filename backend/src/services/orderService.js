@@ -55,9 +55,9 @@ async function insertOrder(reference, data, files, clientIp) {
            full_name, mobile_number, address, height_cm, weight_kg,
            arm_length, shoulder_circumference, blouse_length, trouser_length,
            hip_circumference, waist_circumference, chest_circumference, thigh_circumference,
-           shape, color_description, additional_details,
+           shape, material, color_description, additional_details,
            payment_method, client_ip
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           reference,
           data.locale,
@@ -75,6 +75,7 @@ async function insertOrder(reference, data, files, clientIp) {
           measurements.chestCircumference,
           measurements.thighCircumference,
           customization.shape,
+          customization.material,
           customization.colorDescription,
           customization.additionalDetails,
           payment.method,
@@ -109,7 +110,7 @@ async function insertOrder(reference, data, files, clientIp) {
     });
   } catch (error) {
     if (filesWritten) {
-      await removeOrderFiles(reference).catch(() => {});
+      await removeOrderFiles(reference).catch(() => { });
     }
     throw error;
   }

@@ -30,7 +30,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           ref={ref}
           id={fieldId}
           rows={3}
-          className={cn(controlClasses(error), 'resize-y', className)}
+          className={cn(controlClasses(error), 'min-h-[120px] resize-y', className)}
           aria-invalid={Boolean(error)}
           aria-describedby={describedBy}
           {...props}
