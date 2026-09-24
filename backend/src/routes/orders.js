@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { HttpError } from '../lib/httpError.js';
 import { detectImageType } from '../lib/imageType.js';
-import { limitConcurrentUploads, orderSubmissionLimiter } from '../middleware/security.js';
+import { limitUploadMemory, orderSubmissionLimiter } from '../middleware/security.js';
 import { config } from '../config.js';
 import { parseOrderUpload } from '../middleware/upload.js';
 import { queueOrderNotification } from '../services/notifier.js';
@@ -21,7 +21,7 @@ export const ordersRouter = Router();
  * 201 → { orderReference, status: "success" }
  * 400 → { error: { code: "VALIDATION_FAILED", message, fields: { "customer.fullName": "..." } } }
  */
-const guardUploadMemory = limitConcurrentUploads(config.uploadConcurrency);
+const guardUploadMemory = limitUploadMemory({ maxBytes: config.uploadMemoryBytes });
 
 ordersRouter.post('/', orderSubmissionLimiter, guardUploadMemory, parseOrderUpload, async (req, res) => {
   let json;

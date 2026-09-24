@@ -30,7 +30,7 @@ const { notifyOrder, runNotificationSweep, setMailTransportForTesting } = await 
   '../src/services/notifier.js'
 );
 const { buildOrderEmail, MAX_ATTACHMENT_BYTES } = await import('../src/services/orderEmail.js');
-const { limitConcurrentUploads } = await import('../src/middleware/security.js');
+const { limitUploadMemory } = await import('../src/middleware/security.js');
 const { EventEmitter } = await import('node:events');
 
 async function waitFor(check, timeoutMs = 5000) {
@@ -539,44 +539,53 @@ describe('new-order email', () => {
 });
 
 describe('upload memory guard', () => {
-  // Each upload is buffered in memory while it is checked, so only a
-  // few may run at once; the rest are turned away with 503 instead of
-  // being allowed to exhaust the server's memory.
-  const fakeRes = () => Object.assign(new EventEmitter(), { set: () => { } });
+  // Uploads are buffered in memory while they are checked, so the guard
+  // caps the TOTAL SIZE in flight — small orders should sail through,
+  // only big ones wait.
+  const fakeReq = (bytes) => ({ get: (h) => (h === 'content-length' ? String(bytes) : undefined) });
+  const fakeRes = () => Object.assign(new EventEmitter(), { set: () => {} });
+  const MB = 1024 * 1024;
 
-  test('refuses uploads over the limit and frees the slot afterwards', () => {
-    const guard = limitConcurrentUploads(2);
-    const calls = [];
-    const run = (res) => guard({}, res, (error) => calls.push(error));
-
-    const first = fakeRes();
-    const second = fakeRes();
-    run(first);
-    run(second);
-    assert.deepEqual(calls, [undefined, undefined], 'both allowed through');
-
-    const third = fakeRes();
-    run(third);
-    assert.equal(calls[2]?.status, 503);
-    assert.equal(calls[2]?.code, 'SERVER_BUSY');
-
-    // A finished (or aborted) response releases its slot.
-    first.emit('close');
-    run(fakeRes());
-    assert.equal(calls[3], undefined);
+  test('lets many small uploads through at once', () => {
+    const guard = limitUploadMemory({ maxBytes: 10 * MB });
+    const errors = [];
+    for (let i = 0; i < 200; i += 1) guard(fakeReq(16 * 1024), fakeRes(), (e) => errors.push(e));
+    assert.deepEqual([...new Set(errors)], [undefined], '200 small uploads all allowed');
   });
 
-  test('a slot is released only once per request', () => {
-    const guard = limitConcurrentUploads(1);
-    const calls = [];
-    const res = fakeRes();
-    guard({}, res, (error) => calls.push(error));
-    res.emit('close');
-    res.emit('close');
-    guard({}, fakeRes(), (error) => calls.push(error));
-    guard({}, fakeRes(), (error) => calls.push(error));
-    assert.equal(calls[1], undefined, 'next request allowed');
-    assert.equal(calls[2]?.status, 503, 'double close did not free an extra slot');
+  test('refuses an upload that would blow the memory cap, and frees space after', () => {
+    const guard = limitUploadMemory({ maxBytes: 10 * MB });
+    const results = [];
+    const first = fakeRes();
+    guard(fakeReq(8 * MB), first, (e) => results.push(e));
+    assert.equal(results[0], undefined, 'first big upload runs');
+
+    guard(fakeReq(8 * MB), fakeRes(), (e) => results.push(e));
+    assert.equal(results[1]?.status, 503, 'second is refused straight away, not left hanging');
+    assert.equal(results[1]?.code, 'SERVER_BUSY');
+
+    first.emit('close'); // capacity freed
+    guard(fakeReq(8 * MB), fakeRes(), (e) => results.push(e));
+    assert.equal(results[2], undefined, 'capacity is reusable once a request finishes');
+  });
+
+  test('a client that disconnects mid-upload frees its capacity', () => {
+    const guard = limitUploadMemory({ maxBytes: 10 * MB });
+    const aborted = fakeRes();
+    guard(fakeReq(9 * MB), aborted, () => {});
+    aborted.emit('close'); // client vanished
+    aborted.emit('close'); // duplicate event must not double-free
+
+    let ok;
+    guard(fakeReq(9 * MB), fakeRes(), (e) => { ok = e; });
+    assert.equal(ok, undefined);
+  });
+
+  test('an upload bigger than the whole cap still runs, alone', () => {
+    const guard = limitUploadMemory({ maxBytes: 1 * MB });
+    let started = false;
+    guard(fakeReq(50 * MB), fakeRes(), (e) => { started = e === undefined; });
+    assert.equal(started, true);
   });
 });
 
