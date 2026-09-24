@@ -8,6 +8,9 @@ import { type NextRequest, NextResponse } from 'next/server';
  */
 
 // 10 images x 5 MB, plus the JSON field and multipart overhead.
+/** Signed, httpOnly cookie holding this browser's device token. */
+const DEVICE_COOKIE = 'ora_device';
+
 const MAX_BODY_BYTES = 52 * 1024 * 1024;
 const BACKEND_TIMEOUT_MS = 120_000;
 
@@ -52,6 +55,14 @@ export async function POST(request: NextRequest) {
   const ip = clientIp(request);
   if (ip) headers['x-client-ip'] = ip;
 
+  // Identifies this browser to the backend so order limits are counted
+  // per device, not only per address (mobile networks share addresses,
+  // so one customer could otherwise use up a whole neighbourhood's
+  // allowance). The value is signed by the backend and meaningless to
+  // the browser; it is not an account or a login.
+  const deviceToken = request.cookies.get(DEVICE_COOKIE)?.value;
+  if (deviceToken) headers['x-device-token'] = deviceToken;
+
   try {
     const upstream = await fetch(new URL('/api/orders', backendUrl), {
       method: 'POST',
@@ -63,13 +74,28 @@ export async function POST(request: NextRequest) {
       signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS),
     } as RequestInit & { duplex: 'half' });
 
-    return new NextResponse(await upstream.text(), {
+    const response = new NextResponse(await upstream.text(), {
       status: upstream.status,
       headers: {
         'content-type': upstream.headers.get('content-type') ?? 'application/json',
         'cache-control': 'no-store',
       },
     });
+
+    // The backend issues a fresh token when the browser had none (or a
+    // tampered one). httpOnly so page scripts can't read or forge it.
+    const issuedToken = upstream.headers.get('x-device-token');
+    if (issuedToken) {
+      response.cookies.set(DEVICE_COOKIE, issuedToken, {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        path: '/',
+        maxAge: 365 * 24 * 60 * 60,
+      });
+    }
+
+    return response;
   } catch (error) {
     console.error('Order backend request failed:', error);
     return errorResponse(502, 'UNAVAILABLE', 'Order submission is temporarily unavailable.');

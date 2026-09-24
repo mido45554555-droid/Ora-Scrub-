@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { HttpError } from '../lib/httpError.js';
 import { detectImageTypeFromFile } from '../lib/imageType.js';
-import { limitConcurrentUploads, orderSubmissionLimiter } from '../middleware/security.js';
+import { limitConcurrentUploads } from '../middleware/security.js';
 import { config } from '../config.js';
 import { parseOrderUpload } from '../middleware/upload.js';
 import { queueOrderNotification } from '../services/notifier.js';
@@ -23,7 +23,7 @@ export const ordersRouter = Router();
  */
 const guardUploads = limitConcurrentUploads(config.uploadConcurrency);
 
-ordersRouter.post('/', orderSubmissionLimiter, guardUploads, parseOrderUpload, async (req, res) => {
+ordersRouter.post('/', guardUploads, parseOrderUpload, async (req, res) => {
   let json;
   try {
     json = JSON.parse(typeof req.body?.data === 'string' ? req.body.data : '');

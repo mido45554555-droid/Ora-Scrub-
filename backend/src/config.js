@@ -27,6 +27,7 @@ const envSchema = z.object({
   STORAGE_DIR: z.string().default('./storage'),
   ADMIN_SESSION_HOURS: z.coerce.number().positive().max(24 * 30).default(12),
   ORDER_RATE_LIMIT: z.coerce.number().int().positive().default(5),
+  ORDER_IP_RATE_LIMIT: z.coerce.number().int().positive().default(30),
   ORDER_GLOBAL_RATE_LIMIT: z.coerce.number().int().positive().default(100),
   // How many uploads may stream to disk at once (bounds disk I/O; memory
   // is no longer a factor since uploads are streamed, not buffered).
@@ -71,6 +72,7 @@ function loadConfig() {
     storageDir: path.resolve(BACKEND_ROOT, env.STORAGE_DIR),
     adminSessionMs: env.ADMIN_SESSION_HOURS * 60 * 60 * 1000,
     orderRateLimit: env.ORDER_RATE_LIMIT,
+    orderIpRateLimit: env.ORDER_IP_RATE_LIMIT,
     orderGlobalRateLimit: env.ORDER_GLOBAL_RATE_LIMIT,
     uploadConcurrency: env.UPLOAD_CONCURRENCY,
     mail: {

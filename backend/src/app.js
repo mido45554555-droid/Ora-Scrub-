@@ -2,11 +2,12 @@ import express from 'express';
 import helmet from 'helmet';
 import { pool } from './db.js';
 import { errorHandler, notFound } from './middleware/errors.js';
-import { healthLimiter, noStore, requireInternalKey } from './middleware/security.js';
+import { attachDevice, healthLimiter, noStore, orderSubmissionLimiter, requireInternalKey } from './middleware/security.js';
 import { adminRouter } from './routes/admin.js';
 import { ordersRouter } from './routes/orders.js';
 
-export function createApp() {
+/** @param {{ orderLimiters?: import('express').RequestHandler[] }} [options] */
+export function createApp(options = {}) {
   const app = express();
 
   // Only the Next.js proxy talks to this server, and it passes the real
@@ -37,7 +38,7 @@ export function createApp() {
   });
 
   app.use('/api', requireInternalKey);
-  app.use('/api/orders', ordersRouter);
+  app.use('/api/orders', attachDevice, options.orderLimiters ?? orderSubmissionLimiter, ordersRouter);
   app.use('/api/admin', adminRouter);
 
   app.use(notFound);

@@ -4,6 +4,7 @@ import { config } from '../config.js';
 import { HttpError } from '../lib/httpError.js';
 import { safeEqual } from '../lib/secrets.js';
 import { findSession } from '../services/adminService.js';
+import { mintDeviceToken, readDeviceToken } from '../lib/deviceToken.js';
 
 /**
  * Every /api route except /api/health requires the shared secret that
@@ -26,6 +27,30 @@ export function requireInternalKey(req, _res, next) {
   next();
 }
 
+/**
+ * Identifies the browser behind the request from the signed token the
+ * site keeps in a cookie, minting a fresh one when it is missing or
+ * invalid. The new token goes back in the X-Device-Token response
+ * header; the site stores it in an httpOnly cookie (see the proxy route
+ * in frontend/app/api/order/route.ts).
+ */
+export function attachDevice(req, res, next) {
+  const provided = req.get('x-device-token');
+  const known = readDeviceToken(provided);
+
+  if (known) {
+    req.deviceId = known;
+  } else {
+    const token = mintDeviceToken();
+    req.deviceId = readDeviceToken(token);
+    res.set('x-device-token', token);
+    // A brand-new device gets its own budget, so a customer whose
+    // cookie was cleared is never punished for someone else's traffic.
+  }
+
+  next();
+}
+
 function limiter({ windowMinutes, limit, message }) {
   return rateLimit({
     windowMs: windowMinutes * 60 * 1000,
@@ -38,26 +63,55 @@ function limiter({ windowMinutes, limit, message }) {
   });
 }
 
-const perIpOrderLimiter = limiter({
-  windowMinutes: 15,
-  limit: config.orderRateLimit,
-  message: 'Too many orders submitted. Please try again later.',
-});
+/**
+ * The three layers an order passes through, outermost last:
+ *   1. this browser  — the tight, human-sized limit (signed cookie)
+ *   2. this address  — looser: whole mobile networks share one address,
+ *                      so this stops a single machine hammering the
+ *                      site rather than rationing customers
+ *   3. everyone      — a backstop so a flood of forged devices/IPs
+ *                      still cannot swamp the shop
+ *
+ * Limits are arguments rather than constants so tests can build an app
+ * with small numbers without throttling the rest of the suite.
+ */
+export function makeOrderLimiters({
+  perDevice = config.orderRateLimit,
+  perIp = config.orderIpRateLimit,
+  overall = config.orderGlobalRateLimit,
+  windowMs = 15 * 60 * 1000,
+} = {}) {
+  const deny = (message) => (_req, _res, next) => next(new HttpError(429, 'RATE_LIMITED', message));
 
-// Backstop across ALL clients: if someone rotates spoofed IPs to dodge
-// the per-IP limit, total intake is still capped. Set far above what a
-// real shop receives in 15 minutes.
-const globalOrderLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: config.orderGlobalRateLimit,
-  standardHeaders: false,
-  legacyHeaders: false,
-  keyGenerator: () => 'all-orders',
-  handler: (_req, _res, next) =>
-    next(new HttpError(429, 'RATE_LIMITED', 'We are receiving too many orders right now. Please try again shortly.')),
-});
+  return [
+    rateLimit({
+      windowMs,
+      limit: perDevice,
+      standardHeaders: 'draft-8',
+      legacyHeaders: false,
+      keyGenerator: (req) => 'device:' + (req.deviceId ?? 'unknown'),
+      handler: deny('Too many orders submitted. Please try again later.'),
+    }),
+    rateLimit({
+      windowMs,
+      limit: perIp,
+      standardHeaders: false,
+      legacyHeaders: false,
+      keyGenerator: (req) => ipKeyGenerator(req.clientIp ?? 'unknown'),
+      handler: deny('Too many orders from your network. Please try again later.'),
+    }),
+    rateLimit({
+      windowMs,
+      limit: overall,
+      standardHeaders: false,
+      legacyHeaders: false,
+      keyGenerator: () => 'all-orders',
+      handler: deny('We are receiving too many orders right now. Please try again shortly.'),
+    }),
+  ];
+}
 
-export const orderSubmissionLimiter = [perIpOrderLimiter, globalOrderLimiter];
+export const orderSubmissionLimiter = makeOrderLimiters();
 
 export const loginLimiter = limiter({
   windowMinutes: 15,

@@ -32,6 +32,8 @@ const { notifyOrder, runNotificationSweep, setMailTransportForTesting } = await 
 );
 const { buildOrderEmail, MAX_ATTACHMENT_BYTES } = await import('../src/services/orderEmail.js');
 const { limitConcurrentUploads } = await import('../src/middleware/security.js');
+const { mintDeviceToken, readDeviceToken } = await import('../src/lib/deviceToken.js');
+const { makeOrderLimiters } = await import('../src/middleware/security.js');
 const { EventEmitter } = await import('node:events');
 
 async function waitFor(check, timeoutMs = 5000) {
@@ -612,6 +614,88 @@ describe('upload concurrency guard', () => {
     guard({}, fakeRes(), (e) => results.push(e));
     assert.equal(results[1], undefined);
     assert.equal(results[2]?.status, 503);
+  });
+});
+
+describe('per-device limits', () => {
+  // Customers on one mobile network share an IP, so the tight limit is
+  // counted per browser (a signed cookie) and the IP limit is looser.
+
+  test('a device token survives a round trip and cannot be forged', () => {
+    const token = mintDeviceToken();
+    const id = readDeviceToken(token);
+    assert.ok(id, 'our own token is accepted');
+    assert.equal(readDeviceToken(token), id, 'same id every time');
+
+    const [v, deviceId, issuedAt, signature] = token.split('.');
+    assert.equal(readDeviceToken(`${v}.${deviceId}.${issuedAt}.${signature.slice(0, -2)}XX`), null, 'tampered signature');
+    assert.equal(readDeviceToken(`${v}.other-id.${issuedAt}.${signature}`), null, 'swapped id');
+    assert.equal(readDeviceToken('not-a-token'), null);
+    assert.equal(readDeviceToken(undefined), null);
+    assert.equal(readDeviceToken(token, Date.now() + 400 * 24 * 60 * 60 * 1000), null, 'expired');
+  });
+
+  test('the backend hands a new token to a browser that has none', async () => {
+    const res = await submitOrder(orderForm(), { ip: '198.51.44.1' });
+    assert.equal(res.status, 201);
+    const issued = res.headers.get('x-device-token');
+    assert.ok(issued, 'token returned for the site to store in a cookie');
+    assert.ok(readDeviceToken(issued), 'and it is a valid one');
+  });
+
+  test('a known device keeps its token', async () => {
+    const token = mintDeviceToken();
+    const res = await submitOrder(orderForm(), { ip: '198.51.44.2', headers: { 'x-device-token': token } });
+    assert.equal(res.status, 201);
+    assert.equal(res.headers.get('x-device-token'), null, 'no need to re-issue');
+  });
+
+  test('one device is limited without blocking others on the same address', async () => {
+    const strict = createApp({ orderLimiters: makeOrderLimiters({ perDevice: 2, perIp: 50, overall: 50 }) });
+    const server = strict.listen(0, '127.0.0.1');
+    await new Promise((resolve) => server.once('listening', resolve));
+    const url = `http://127.0.0.1:${server.address().port}/api/orders`;
+    const send = (token) =>
+      fetch(url, {
+        method: 'POST',
+        body: orderForm(),
+        headers: { 'x-internal-api-key': KEY, 'x-client-ip': '100.64.0.1', 'x-device-token': token },
+      }).then((r) => r.status);
+
+    try {
+      const phone = mintDeviceToken();
+      const laptop = mintDeviceToken();
+      assert.deepEqual([await send(phone), await send(phone), await send(phone)], [201, 201, 429], 'one browser runs out');
+      assert.equal(await send(laptop), 201, 'another browser on the same network is unaffected');
+    } finally {
+      server.closeAllConnections();
+      await new Promise((resolve) => server.close(resolve));
+    }
+  });
+
+  test('the address limit still catches a machine cycling through devices', async () => {
+    const strict = createApp({ orderLimiters: makeOrderLimiters({ perDevice: 50, perIp: 3, overall: 50 }) });
+    const server = strict.listen(0, '127.0.0.1');
+    await new Promise((resolve) => server.once('listening', resolve));
+    const url = `http://127.0.0.1:${server.address().port}/api/orders`;
+
+    try {
+      const statuses = [];
+      for (let i = 0; i < 5; i += 1) {
+        statuses.push(
+          await fetch(url, {
+            method: 'POST',
+            body: orderForm(),
+            // A fresh device token every time — the IP layer is what stops it.
+            headers: { 'x-internal-api-key': KEY, 'x-client-ip': '100.64.0.9', 'x-device-token': mintDeviceToken() },
+          }).then((r) => r.status)
+        );
+      }
+      assert.deepEqual(statuses, [201, 201, 201, 429, 429]);
+    } finally {
+      server.closeAllConnections();
+      await new Promise((resolve) => server.close(resolve));
+    }
   });
 });
 

@@ -128,14 +128,23 @@ Images: JPG, PNG or WEBP, 5 MB each.
   of 12. Session tokens are 256-bit random values, and only their SHA-256
   is stored. Sessions expire after `ADMIN_SESSION_HOURS`. Unknown users
   and wrong passwords take the same time and return the same error.
-- **Rate limits (per 15 min):** 5 orders per IP, 100 orders total as a
-  backstop, 10 login attempts per IP, and 600 admin requests per IP.
-- **Memory under load:** each upload is held in memory while it's
-  checked (up to 10 images × 5 MB), so `UPLOAD_CONCURRENCY` (default 4)
-  caps how many are parsed at once; the rest get `503` + `Retry-After`
-  immediately, before any bytes are buffered. Measured: 25 simultaneous
-  ~50 MB orders peaked at 273 MB RSS instead of exhausting memory.
-  Aborted uploads release their slot (tested).
+- **Rate limits (per 15 min), three layers:** 5 orders per browser, 30
+  per IP, and 100 across everyone as a backstop; plus 10 login attempts
+  and 600 admin requests per IP. The per-browser layer exists because
+  whole mobile networks share one address here, so a per-IP-only limit
+  would block real customers. A browser is identified by the signed,
+  httpOnly `ora_device` cookie the backend issues — it carries no
+  personal data, is not a login, and a forged one is rejected and
+  replaced.
+- **Uploads under load:** images stream to temp files inside
+  `STORAGE_DIR/.tmp` and are moved into the order folder with a rename,
+  so memory doesn't grow with the size or number of uploads, and the
+  type check reads only the first 12 bytes. Temp files are removed on
+  every path (success, rejection, oversize), each covered by a test.
+  `UPLOAD_CONCURRENCY` (default 64) bounds disk I/O; anything over it
+  gets `503` + `Retry-After` immediately. Measured: 100 small orders and
+  60 simultaneous orders all accepted, 12 simultaneous 30 MB orders all
+  accepted, peak RSS ~110 MB.
 - **Database under load:** the pool is capped at 10 connections with a
   queue limit, so a flood fails fast instead of piling up forever.
 - **Health endpoint:** public, so its database check is cached for 5
