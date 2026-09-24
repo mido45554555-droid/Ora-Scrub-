@@ -1,13 +1,33 @@
+import { randomUUID } from 'node:crypto';
+import { mkdir, rm } from 'node:fs/promises';
+import path from 'node:path';
 import multer from 'multer';
+import { config } from '../config.js';
 import { HttpError } from '../lib/httpError.js';
 import { FILE_FIELDS, MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_MB, MAX_TOTAL_FILES } from '../validation/order.js';
 
 /**
- * Parses the order's multipart body into memory (max 10 files x 5 MB),
- * so nothing touches the disk until the whole order has been validated.
+ * Streams each uploaded image straight to a temporary file instead of
+ * buffering it in memory.
+ *
+ * This is what lets the server take many uploads at once: memory use no
+ * longer grows with the size or number of uploads (it was 10 images x
+ * 5 MB per order held in RAM, which had to be capped and made customers
+ * wait). The temp directory sits inside STORAGE_DIR so the final move
+ * is a rename on the same volume, not a copy.
  */
+export const TEMP_DIR = path.join(config.storageDir, '.tmp');
+
+export async function ensureTempDir() {
+  await mkdir(TEMP_DIR, { recursive: true });
+}
+
 const parser = multer({
-  storage: multer.memoryStorage(),
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, TEMP_DIR),
+    // Random name: the customer's filename never touches the filesystem.
+    filename: (_req, _file, cb) => cb(null, `${randomUUID()}.part`),
+  }),
   // Browsers send filenames as raw UTF-8; multer's latin1 default turns
   // Arabic names into mojibake.
   defParamCharset: 'utf8',
@@ -22,9 +42,25 @@ const parser = multer({
   },
 }).fields(Object.entries(FILE_FIELDS).map(([name, rule]) => ({ name, maxCount: rule.max })));
 
+/** Deletes whatever this request wrote to the temp directory. */
+export async function cleanupUploads(req) {
+  const files = Object.values(req.files ?? {}).flat();
+  await Promise.all(files.map((file) => rm(file.path, { force: true }).catch(() => {})));
+}
+
 export function parseOrderUpload(req, res, next) {
   parser(req, res, (error) => {
-    if (!error) return next();
+    if (!error) {
+      // Whatever happens next, temp files must not be left behind: the
+      // successful path moves them into storage first, so by then these
+      // paths no longer exist and the cleanup is a no-op.
+      res.once('close', () => {
+        cleanupUploads(req).catch(() => {});
+      });
+      return next();
+    }
+
+    cleanupUploads(req).catch(() => {});
 
     if (error instanceof multer.MulterError) {
       const rule = FILE_FIELDS[error.field];

@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import { withTransaction } from '../db.js';
 import { generateOrderReference } from '../lib/reference.js';
-import { removeOrderFiles, writeOrderFiles } from './fileStorage.js';
+import { moveOrderFiles, removeOrderFiles } from './fileStorage.js';
 
 const MAX_REFERENCE_ATTEMPTS = 5;
 
@@ -18,7 +18,7 @@ function displayName(originalName) {
  *
  * @param {object} params
  * @param {import('zod').infer<typeof import('../validation/order.js').orderDataSchema>} params.data
- * @param {{ kind: string, originalName: string, buffer: Buffer, mime: string, extension: string }[]} params.files
+ * @param {{ kind: string, originalName: string, tempPath: string, sizeBytes: number, mime: string, extension: string }[]} params.files
  * @param {string | null} params.clientIp
  * @returns {Promise<string>} the new order reference
  */
@@ -96,7 +96,7 @@ async function insertOrder(reference, data, files, clientIp) {
               displayName(file.originalName),
               file.storedName,
               file.mime,
-              file.buffer.length,
+              file.sizeBytes,
             ]),
           ]
         );
@@ -106,7 +106,7 @@ async function insertOrder(reference, data, files, clientIp) {
       // fails, the rows roll back; if the commit fails, the catch below
       // removes the files.
       filesWritten = true;
-      await writeOrderFiles(reference, storedFiles);
+      await moveOrderFiles(reference, storedFiles);
     });
   } catch (error) {
     if (filesWritten) {

@@ -2,10 +2,12 @@ import { config } from './config.js';
 import { pool } from './db.js';
 import { createApp } from './app.js';
 import { ensureStorageDir } from './services/fileStorage.js';
+import { ensureTempDir } from './middleware/upload.js';
 import { startNotificationWorker, stopNotificationWorker } from './services/notifier.js';
 
 async function main() {
   await ensureStorageDir();
+  await ensureTempDir();
 
   try {
     await pool.query('SELECT 1 FROM orders LIMIT 1');

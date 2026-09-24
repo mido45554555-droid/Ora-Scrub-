@@ -82,46 +82,32 @@ export const adminLimiter = limiter({
 });
 
 /**
- * Caps the total size of uploads being parsed at the same time.
+ * Caps how many uploads stream to disk at the same time.
  *
- * Each order is held in memory while it's checked (up to 10 images x
- * 5 MB), so without a cap, enough simultaneous uploads would exhaust
- * memory. The cap is on BYTES, not on the number of requests: small
- * orders barely use memory, so hundreds can run at once, while a few
- * large ones are what actually has to wait.
- *
- * A request that doesn't fit is answered immediately with 503 +
- * Retry-After. Holding it in a queue was tried and is worse: the server
- * must stop reading the body to keep memory down, and clients abort a
- * stalled upload themselves (measured: one in five aborted), so the
- * customer waits a long time and then loses the upload anyway. A fast,
- * honest "busy, try again" keeps their filled-in form intact.
- *
- * One request larger than the whole cap still runs, alone, so a big
- * order is never permanently rejected.
+ * Uploads are streamed to temp files (see middleware/upload.js), so
+ * memory no longer grows with them and this cap is only about bounding
+ * disk I/O and open file handles — hence a generous default. Requests
+ * over the cap get 503 + Retry-After immediately, which keeps the
+ * customer's filled-in form intact.
  */
-export function limitUploadMemory({ maxBytes, perRequestBytes = 55 * 1024 * 1024 }) {
+export function limitConcurrentUploads(max) {
   let inFlight = 0;
 
-  return (req, res, next) => {
-    const declared = Number(req.get('content-length') ?? 0);
-    // No/garbage content-length: assume the worst a request may carry.
-    const size = declared > 0 ? Math.min(declared, perRequestBytes) : perRequestBytes;
-
-    if (inFlight !== 0 && inFlight + size > maxBytes) {
+  return (_req, res, next) => {
+    if (inFlight >= max) {
       res.set('Retry-After', '10');
       next(new HttpError(503, 'SERVER_BUSY', 'The server is busy right now. Please try again in a moment.'));
       return;
     }
 
-    inFlight += size;
+    inFlight += 1;
     let released = false;
     // 'close' covers a finished response and a client that disconnected
-    // mid-upload, so capacity is never leaked.
+    // mid-upload, so a slot is never leaked.
     res.once('close', () => {
       if (!released) {
         released = true;
-        inFlight -= size;
+        inFlight -= 1;
       }
     });
     next();

@@ -25,12 +25,13 @@ const { config } = await import('../src/config.js');
 const { pool } = await import('../src/db.js');
 const { createApp } = await import('../src/app.js');
 const { ensureStorageDir } = await import('../src/services/fileStorage.js');
+const { ensureTempDir, TEMP_DIR } = await import('../src/middleware/upload.js');
 const { hashPassword } = await import('../src/lib/passwords.js');
 const { notifyOrder, runNotificationSweep, setMailTransportForTesting } = await import(
   '../src/services/notifier.js'
 );
 const { buildOrderEmail, MAX_ATTACHMENT_BYTES } = await import('../src/services/orderEmail.js');
-const { limitUploadMemory } = await import('../src/middleware/security.js');
+const { limitConcurrentUploads } = await import('../src/middleware/security.js');
 const { EventEmitter } = await import('node:events');
 
 async function waitFor(check, timeoutMs = 5000) {
@@ -116,6 +117,7 @@ const submitOrder = (form, options = {}) => api('/api/orders', { method: 'POST',
 before(async () => {
   await rm(config.storageDir, { recursive: true, force: true });
   await ensureStorageDir();
+  await ensureTempDir();
   await pool.query('DELETE FROM orders');
   await pool.query('DELETE FROM admins');
   server = createApp().listen(0, '127.0.0.1');
@@ -254,13 +256,14 @@ describe('order submission', () => {
 
   test('nothing is left on disk or in the database after a rejected order', async () => {
     const [[{ before }]] = await pool.query('SELECT COUNT(*) AS `before` FROM orders');
-    const dirsBefore = (await readdir(config.storageDir)).length;
+    const orderDirs = async () => (await readdir(config.storageDir)).filter((n) => n.startsWith('ORA-'));
+    const dirsBefore = (await orderDirs()).length;
     const data = validData();
     data.customer.address = 'short';
     await submitOrder(orderForm({ data }));
     const [[{ after: afterCount }]] = await pool.query('SELECT COUNT(*) AS `after` FROM orders');
     assert.equal(afterCount, before);
-    assert.equal((await readdir(config.storageDir)).length, dirsBefore);
+    assert.equal((await orderDirs()).length, dirsBefore);
   });
 });
 
@@ -538,54 +541,77 @@ describe('new-order email', () => {
   });
 });
 
-describe('upload memory guard', () => {
-  // Uploads are buffered in memory while they are checked, so the guard
-  // caps the TOTAL SIZE in flight — small orders should sail through,
-  // only big ones wait.
-  const fakeReq = (bytes) => ({ get: (h) => (h === 'content-length' ? String(bytes) : undefined) });
-  const fakeRes = () => Object.assign(new EventEmitter(), { set: () => {} });
-  const MB = 1024 * 1024;
+describe('streamed uploads leave nothing behind', () => {
+  // Uploads stream to <STORAGE_DIR>/.tmp; a leak there would quietly
+  // fill the disk, so every path must clean up after itself.
+  const tempFiles = async () => (await readdir(TEMP_DIR)).length;
 
-  test('lets many small uploads through at once', () => {
-    const guard = limitUploadMemory({ maxBytes: 10 * MB });
-    const errors = [];
-    for (let i = 0; i < 200; i += 1) guard(fakeReq(16 * 1024), fakeRes(), (e) => errors.push(e));
-    assert.deepEqual([...new Set(errors)], [undefined], '200 small uploads all allowed');
+  test('temp files are gone after a successful order', async () => {
+    const res = await submitOrder(orderForm(), { ip: '198.18.1.1' });
+    assert.equal(res.status, 201);
+    const { orderReference } = await res.json();
+    await waitFor(async () => (await tempFiles()) === 0);
+    assert.equal(await tempFiles(), 0);
+    // ...because they were moved into the order folder.
+    assert.equal((await readdir(path.join(config.storageDir, orderReference))).length, 5);
   });
 
-  test('refuses an upload that would blow the memory cap, and frees space after', () => {
-    const guard = limitUploadMemory({ maxBytes: 10 * MB });
+  test('temp files are gone after a rejected order', async () => {
+    const fake = Buffer.from('not an image');
+    const res = await submitOrder(
+      orderForm({ files: [['colorReferenceImage', fake, 'c.png', 'image/png'], ['paymentScreenshot', PNG, 'p.png', 'image/png']] }),
+      { ip: '198.18.1.2' }
+    );
+    assert.equal(res.status, 400);
+    await waitFor(async () => (await tempFiles()) === 0);
+    assert.equal(await tempFiles(), 0, 'rejected uploads are deleted');
+  });
+
+  test('temp files are gone after an oversized upload', async () => {
+    const big = Buffer.concat([PNG, Buffer.alloc(5 * 1024 * 1024)]);
+    const res = await submitOrder(
+      orderForm({ files: [['colorReferenceImage', big, 'huge.png', 'image/png'], ['paymentScreenshot', PNG, 'p.png', 'image/png']] }),
+      { ip: '198.18.1.3' }
+    );
+    assert.equal(res.status, 413);
+    await waitFor(async () => (await tempFiles()) === 0);
+    assert.equal(await tempFiles(), 0);
+  });
+});
+
+describe('upload concurrency guard', () => {
+  // Uploads stream to disk, so this guard bounds disk I/O rather than
+  // memory; it must never leak a slot, or the endpoint would jam shut.
+  const fakeRes = () => Object.assign(new EventEmitter(), { set: () => {} });
+
+  test('allows up to the limit, refuses the next one, frees slots after', () => {
+    const guard = limitConcurrentUploads(2);
     const results = [];
     const first = fakeRes();
-    guard(fakeReq(8 * MB), first, (e) => results.push(e));
-    assert.equal(results[0], undefined, 'first big upload runs');
+    guard({}, first, (e) => results.push(e));
+    guard({}, fakeRes(), (e) => results.push(e));
+    assert.deepEqual(results, [undefined, undefined]);
 
-    guard(fakeReq(8 * MB), fakeRes(), (e) => results.push(e));
-    assert.equal(results[1]?.status, 503, 'second is refused straight away, not left hanging');
-    assert.equal(results[1]?.code, 'SERVER_BUSY');
+    guard({}, fakeRes(), (e) => results.push(e));
+    assert.equal(results[2]?.status, 503);
+    assert.equal(results[2]?.code, 'SERVER_BUSY');
 
-    first.emit('close'); // capacity freed
-    guard(fakeReq(8 * MB), fakeRes(), (e) => results.push(e));
-    assert.equal(results[2], undefined, 'capacity is reusable once a request finishes');
+    first.emit('close');
+    guard({}, fakeRes(), (e) => results.push(e));
+    assert.equal(results[3], undefined, 'slot reusable once a request ends');
   });
 
-  test('a client that disconnects mid-upload frees its capacity', () => {
-    const guard = limitUploadMemory({ maxBytes: 10 * MB });
-    const aborted = fakeRes();
-    guard(fakeReq(9 * MB), aborted, () => {});
-    aborted.emit('close'); // client vanished
-    aborted.emit('close'); // duplicate event must not double-free
-
-    let ok;
-    guard(fakeReq(9 * MB), fakeRes(), (e) => { ok = e; });
-    assert.equal(ok, undefined);
-  });
-
-  test('an upload bigger than the whole cap still runs, alone', () => {
-    const guard = limitUploadMemory({ maxBytes: 1 * MB });
-    let started = false;
-    guard(fakeReq(50 * MB), fakeRes(), (e) => { started = e === undefined; });
-    assert.equal(started, true);
+  test('a duplicate close event does not free an extra slot', () => {
+    const guard = limitConcurrentUploads(1);
+    const results = [];
+    const res = fakeRes();
+    guard({}, res, (e) => results.push(e));
+    res.emit('close');
+    res.emit('close');
+    guard({}, fakeRes(), (e) => results.push(e));
+    guard({}, fakeRes(), (e) => results.push(e));
+    assert.equal(results[1], undefined);
+    assert.equal(results[2]?.status, 503);
   });
 });
 

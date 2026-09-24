@@ -1,3 +1,5 @@
+import { open } from 'node:fs/promises';
+
 /**
  * Identifies an image from its first bytes ("magic numbers"). The
  * browser-supplied MIME type and file extension are both
@@ -33,4 +35,22 @@ const SIGNATURES = [
 export function detectImageType(buffer) {
   const match = SIGNATURES.find((signature) => signature.matches(buffer));
   return match ? { mime: match.mime, extension: match.extension } : null;
+}
+
+/** Longest signature is 12 bytes ("RIFF" + size + "WEBP"). */
+export const SIGNATURE_BYTES = 12;
+
+/**
+ * Same check for a file on disk: reads only the first bytes, so an
+ * upload never has to be held in memory to be identified.
+ */
+export async function detectImageTypeFromFile(filePath) {
+  const handle = await open(filePath, 'r');
+  try {
+    const buffer = Buffer.alloc(SIGNATURE_BYTES);
+    const { bytesRead } = await handle.read(buffer, 0, SIGNATURE_BYTES, 0);
+    return detectImageType(buffer.subarray(0, bytesRead));
+  } finally {
+    await handle.close();
+  }
 }

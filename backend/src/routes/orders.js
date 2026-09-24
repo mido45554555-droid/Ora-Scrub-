@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { HttpError } from '../lib/httpError.js';
-import { detectImageType } from '../lib/imageType.js';
-import { limitUploadMemory, orderSubmissionLimiter } from '../middleware/security.js';
+import { detectImageTypeFromFile } from '../lib/imageType.js';
+import { limitConcurrentUploads, orderSubmissionLimiter } from '../middleware/security.js';
 import { config } from '../config.js';
 import { parseOrderUpload } from '../middleware/upload.js';
 import { queueOrderNotification } from '../services/notifier.js';
@@ -21,9 +21,9 @@ export const ordersRouter = Router();
  * 201 → { orderReference, status: "success" }
  * 400 → { error: { code: "VALIDATION_FAILED", message, fields: { "customer.fullName": "..." } } }
  */
-const guardUploadMemory = limitUploadMemory({ maxBytes: config.uploadMemoryBytes });
+const guardUploads = limitConcurrentUploads(config.uploadConcurrency);
 
-ordersRouter.post('/', orderSubmissionLimiter, guardUploadMemory, parseOrderUpload, async (req, res) => {
+ordersRouter.post('/', orderSubmissionLimiter, guardUploads, parseOrderUpload, async (req, res) => {
   let json;
   try {
     json = JSON.parse(typeof req.body?.data === 'string' ? req.body.data : '');
@@ -41,7 +41,8 @@ ordersRouter.post('/', orderSubmissionLimiter, guardUploadMemory, parseOrderUplo
       fieldErrors[rule.errorPath] ??= rule.requiredMessage ?? 'fileRequired';
     }
     for (const file of uploaded) {
-      const type = detectImageType(file.buffer);
+      // Read only the first bytes of the temp file, never the whole image.
+      const type = await detectImageTypeFromFile(file.path);
       if (!type) {
         fieldErrors[rule.errorPath] ??= 'fileType';
         continue;
@@ -49,7 +50,8 @@ ordersRouter.post('/', orderSubmissionLimiter, guardUploadMemory, parseOrderUplo
       files.push({
         kind: rule.kind,
         originalName: file.originalname,
-        buffer: file.buffer,
+        tempPath: file.path,
+        sizeBytes: file.size,
         mime: type.mime,
         extension: type.extension,
       });

@@ -1,4 +1,4 @@
-import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, rename, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { config } from '../config.js';
 
@@ -28,13 +28,26 @@ export async function ensureStorageDir() {
   await mkdir(config.storageDir, { recursive: true });
 }
 
-/** @param {{ storedName: string, buffer: Buffer }[]} files */
-export async function writeOrderFiles(reference, files) {
+/**
+ * Moves the streamed temp files into the order's folder. A rename on the
+ * same volume, so no copy and no memory: the temp directory lives inside
+ * STORAGE_DIR for exactly this reason. Falls back to copy+delete if the
+ * two ever end up on different volumes.
+ *
+ * @param {{ storedName: string, tempPath: string }[]} files
+ */
+export async function moveOrderFiles(reference, files) {
   const dir = resolveInsideStorage(reference);
   await mkdir(dir, { recursive: true });
   for (const file of files) {
-    // 'wx' fails instead of overwriting if the name somehow already exists.
-    await writeFile(resolveInsideStorage(reference, file.storedName), file.buffer, { flag: 'wx' });
+    const target = resolveInsideStorage(reference, file.storedName);
+    try {
+      await rename(file.tempPath, target);
+    } catch (error) {
+      if (error.code !== 'EXDEV') throw error;
+      await copyFile(file.tempPath, target);
+      await rm(file.tempPath, { force: true });
+    }
   }
 }
 
