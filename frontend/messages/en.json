@@ -25,6 +25,7 @@
   },
   "orderConfirmation": {
     "title": "Order received",
+<<<<<<< HEAD
     "body": "Thank you — ORA has received your order details.",
     "referenceLabel": "Order reference",
     "missingReference": "We couldn't find an order reference. If you just submitted an order, please check your details and try again.",
@@ -32,6 +33,47 @@
   },
   "contactPage": {
     "title": "Contact"
+=======
+    "body": "Your order has been received successfully.",
+    "referenceLabel": "Order reference",
+    "queuePosition": "Your position: #{position} / {capacity}",
+    "orderReceivedAt": "Received: {date} (Cairo time).",
+    "workStarts": "We will start working on your scrubs on {date}.",
+    "batchDate": "Processing batch: {date}",
+    "batchCapacity": "Maximum batch capacity: {capacity} orders.",
+    "queueUnavailable": "Your order was received. Queue details are temporarily unavailable; keep your reference for your records.",
+    "missingReference": "We couldn't find an order reference. If you just submitted an order, please check your details and try again.",
+    "backToHome": "Back to home"
+  },
+  "deliveryAction": {
+    "title": "Confirm delivery",
+    "reviewPrompt": "Review the order details before marking it delivered.",
+    "reference": "Order reference",
+    "customer": "Customer",
+    "batchPosition": "Batch position",
+    "batchDate": "Work batch",
+    "currentStatus": "Current status",
+    "workStarts": "This date is the scheduled work start, not a delivery date: {date}.",
+    "confirm": "Confirm Delivered",
+    "success": "Order marked as delivered successfully.",
+    "alreadyDelivered": "This order has already been marked as delivered.",
+    "cancelled": "A cancelled order cannot be marked as delivered.",
+    "invalid": "This delivery link is invalid or has expired. Ask ORA to send a new order email.",
+    "unavailable": "We could not verify this delivery link right now. Please try again.",
+    "statusPendingReview": "Pending review",
+    "statusPaymentConfirmed": "Payment confirmed",
+    "statusInProduction": "In production",
+    "statusShipped": "Shipped",
+    "statusCompleted": "Completed internally",
+    "statusDelivered": "Delivered",
+    "statusCancelled": "Cancelled"
+  },
+  "contactPage": {
+    "title": "Contact",
+    "intro": "Get in touch with ORA.",
+    "instagram": "Follow us on Instagram",
+    "whatsapp": "Chat with us on WhatsApp"
+>>>>>>> cd6dd58 (first upload)
   },
   "home": {
     "hero": {

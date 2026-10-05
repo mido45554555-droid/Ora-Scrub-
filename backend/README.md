@@ -22,6 +22,43 @@ npm run create-admin -- owner    # prompts for a password (min 12 chars)
 npm start                        # or: npm run dev  (restarts on file changes)
 ```
 
+<<<<<<< HEAD
+=======
+`npm run setup` is also the idempotent schema migration command. It backfills
+existing orders with their original created-at processing week and stable queue
+positions before enforcing the unique date/position constraint. New orders are
+assigned to Saturday-start processing batches of up to 10 orders. Positions
+restart at 1 for each batch; existing orders retain their historical dates and
+positions. Saturday dates are calculated on the backend in
+`PROCESSING_TIME_ZONE` (default `Africa/Cairo`); set the same value in the
+backend `.env` on every instance. Assignment is transactionally serialized by
+the existing MariaDB/MySQL allocator lock, not by the browser. The batch date
+is the scheduled work-start date, not a delivery promise.
+
+The delivery-action feature adds nullable metadata only. On an existing
+database, `npm run migrate:delivery` adds `delivered_at`, the hashed one-time
+action token/expiry/use timestamps, and its unique hash index without updating
+or deleting existing order rows. Set `PUBLIC_SITE_URL` to the public site
+origin (for local development, `http://localhost:3000`; production requires
+the deployed HTTPS origin) so notification emails link back to the correct
+site.
+
+An authenticated admin can complete an order with
+`POST /api/admin/orders/:reference/complete`; the endpoint requires the existing
+internal API key and admin bearer session. It retains the order and its assigned
+batch date/position and records `completed_at`; completed positions are not reused.
+`completed` means internal processing is complete; `delivered` means the
+customer received the order. Shop emails include a 256-bit random delivery
+action link; only its SHA-256 hash is stored, it expires after 30 days, and a
+confirmation page requires a deliberate POST before the backend changes the
+status and stamps `delivered_at`. Repeated clicks report the already-delivered
+state without changing that timestamp. Cancelled orders cannot be delivered.
+
+Batch delivery totals are derived from retained order rows at
+`GET /api/admin/orders/batches` (`delivered`, `remaining`, and
+`fullyDelivered`); no duplicate counters are stored.
+
+>>>>>>> cd6dd58 (first upload)
 Then in `../frontend/.env.local`:
 
 ```
@@ -79,18 +116,34 @@ order form's own keys (`customer.fullName`, `payment.screenshot`, ...).
 |---|---|---|---|
 | GET | `/api/health` | none | `{status:"ok"}` if the DB is reachable |
 | POST | `/api/orders` | key | Submit an order (multipart, see below) → `201 {orderReference, status:"success"}` |
+<<<<<<< HEAD
+=======
+| GET | `/api/delivery/:token` | key | Minimal order information for the one-time confirmation page |
+| POST | `/api/delivery/:token/confirm` | key | Consume the capability and idempotently mark that order delivered |
+>>>>>>> cd6dd58 (first upload)
 | POST | `/api/admin/login` | key | `{username, password}` → `{token, expiresAt, admin}` |
 | POST | `/api/admin/logout` | key + admin | Ends the session |
 | GET | `/api/admin/me` | key + admin | Current admin |
 | GET | `/api/admin/orders?status=&q=&page=&pageSize=` | key + admin | List/search (reference, name, mobile) |
+<<<<<<< HEAD
+=======
+| GET | `/api/admin/orders/batches` | key + admin | Historical per-batch total/delivered/remaining summary |
+>>>>>>> cd6dd58 (first upload)
 | GET | `/api/admin/orders/:reference` | key + admin | Full order + file list |
 | PATCH | `/api/admin/orders/:reference` | key + admin | `{status?, adminNotes?}` |
 | GET | `/api/admin/orders/:reference/files/:fileId` | key + admin | The image itself |
 
 Admin requests send `Authorization: Bearer <token>`.
 
+<<<<<<< HEAD
 Order statuses: `pending_review` (new) → `payment_confirmed` →
 `in_production` → `shipped` → `delivered`, or `cancelled`.
+=======
+Order statuses include `pending_review`, `payment_confirmed`, `in_production`,
+`shipped`, `completed` (internal work complete), `delivered` (customer received),
+and `cancelled`. Direct generic status updates cannot set `delivered`; use the
+single-use confirmation action.
+>>>>>>> cd6dd58 (first upload)
 
 **`POST /api/orders` body** (`multipart/form-data`):
 
@@ -128,6 +181,14 @@ Images: JPG, PNG or WEBP, 5 MB each.
   of 12. Session tokens are 256-bit random values, and only their SHA-256
   is stored. Sessions expire after `ADMIN_SESSION_HOURS`. Unknown users
   and wrong passwords take the same time and return the same error.
+<<<<<<< HEAD
+=======
+- **Email delivery action:** random 256-bit capability tokens are scoped to
+  one order, SHA-256-hashed in the database, expire after 30 days, and can be
+  consumed once by an atomic conditional update. GET never changes an order;
+  the no-store/no-referrer confirmation page requires an explicit POST and
+  shows only the reference, customer name, batch/position, and status.
+>>>>>>> cd6dd58 (first upload)
 - **Rate limits (per 15 min), three layers:** 5 orders per browser, 30
   per IP, and 100 across everyone as a backstop; plus 10 login attempts
   and 600 admin requests per IP. The per-browser layer exists because

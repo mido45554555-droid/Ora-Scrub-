@@ -1,7 +1,10 @@
 import { useTranslations } from 'next-intl';
 import { Container, Section } from '@/components/ui/Section';
 import { Divider } from '@/components/ui/Divider';
+<<<<<<< HEAD
 import { PlaceholderArt } from '@/components/ui/PlaceholderArt';
+=======
+>>>>>>> cd6dd58 (first upload)
 
 /**
  * Editorial layout: three unequal-width panels rather than a uniform
@@ -22,6 +25,10 @@ export function ShowcaseSection() {
           <p className="mt-4 text-ink-muted">{t('body')}</p>
         </div>
 
+<<<<<<< HEAD
+=======
+        {/* Product photo structure hidden until real photography is available.
+>>>>>>> cd6dd58 (first upload)
         <div className="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-6">
           <div className="sm:col-span-4">
             <PlaceholderArt variant="top" className="w-full" />
@@ -30,6 +37,10 @@ export function ShowcaseSection() {
             <PlaceholderArt variant="set" className="w-full" />
           </div>
         </div>
+<<<<<<< HEAD
+=======
+        */}
+>>>>>>> cd6dd58 (first upload)
 
         <Divider ornamented className="mt-14" />
         <p className="mt-8 max-w-prose text-sm text-ink-muted">{t('note')}</p>

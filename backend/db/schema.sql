@@ -4,9 +4,19 @@
 CREATE TABLE IF NOT EXISTS orders (
   id                     BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   reference              VARCHAR(32)  NOT NULL,
+<<<<<<< HEAD
   status                 ENUM('pending_review','payment_confirmed','in_production','shipped','delivered','cancelled')
                          NOT NULL DEFAULT 'pending_review',
   locale                 ENUM('en','ar') NOT NULL,
+=======
+  status                 ENUM('pending_review','payment_confirmed','in_production','shipped','delivered','cancelled','completed')
+                         NOT NULL DEFAULT 'pending_review',
+  locale                 ENUM('en','ar') NOT NULL,
+  -- New rows store the Saturday batch/work-start date. Historical rows
+  -- keep their original processing_week value unchanged for compatibility.
+  processing_week        DATE NOT NULL,
+  queue_position         INT UNSIGNED NOT NULL,
+>>>>>>> cd6dd58 (first upload)
 
   full_name              VARCHAR(120) NOT NULL,
   mobile_number          VARCHAR(20)  NOT NULL,
@@ -40,6 +50,7 @@ CREATE TABLE IF NOT EXISTS orders (
 
   created_at             DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at             DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+<<<<<<< HEAD
 
   PRIMARY KEY (id),
   UNIQUE KEY uq_orders_reference (reference),
@@ -48,6 +59,31 @@ CREATE TABLE IF NOT EXISTS orders (
   KEY idx_orders_pending_notify (notified_at, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+=======
+  completed_at           DATETIME NULL,
+  delivered_at           DATETIME NULL,
+  delivery_action_hash   CHAR(64) NULL,
+  delivery_action_expires_at DATETIME NULL,
+  delivery_action_used_at DATETIME NULL,
+
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_orders_reference (reference),
+  UNIQUE KEY uq_orders_week_position (processing_week, queue_position),
+  KEY idx_orders_status_created (status, created_at),
+  KEY idx_orders_created (created_at),
+  KEY idx_orders_pending_notify (notified_at, created_at),
+  UNIQUE KEY uq_orders_delivery_action_hash (delivery_action_hash)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- A single InnoDB row serializes queue allocation across concurrent requests
+-- and multiple backend processes. It is locked only inside order creation.
+CREATE TABLE IF NOT EXISTS order_queue_lock (
+  id TINYINT UNSIGNED NOT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+INSERT IGNORE INTO order_queue_lock (id) VALUES (1);
+
+>>>>>>> cd6dd58 (first upload)
 -- File ids are random UUIDs so they can't be enumerated; stored_name is
 -- generated server-side and never derived from the uploaded filename.
 CREATE TABLE IF NOT EXISTS order_files (

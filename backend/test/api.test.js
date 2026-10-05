@@ -10,7 +10,13 @@ import { fileURLToPath } from 'node:url';
 
 const backendRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 process.env.NODE_ENV = 'test';
+<<<<<<< HEAD
 process.env.DB_NAME = 'ora_scrubs_test';
+=======
+// Keep the default isolated, while allowing callers to select a newly
+// provisioned throwaway database instead of clearing an existing test DB.
+process.env.DB_NAME ??= 'ora_scrubs_test';
+>>>>>>> cd6dd58 (first upload)
 process.env.STORAGE_DIR = './test-storage';
 process.env.ORDER_RATE_LIMIT = '1000';
 process.env.ORDER_GLOBAL_RATE_LIMIT = '1000';
@@ -34,6 +40,14 @@ const { buildOrderEmail, MAX_ATTACHMENT_BYTES } = await import('../src/services/
 const { limitConcurrentUploads } = await import('../src/middleware/security.js');
 const { mintDeviceToken, readDeviceToken } = await import('../src/lib/deviceToken.js');
 const { makeOrderLimiters } = await import('../src/middleware/security.js');
+<<<<<<< HEAD
+=======
+const { createOrder } = await import('../src/services/orderService.js');
+const { createDeliveryActionToken, listBatchDeliverySummary } = await import('../src/services/deliveryService.js');
+const { sha256Hex } = await import('../src/lib/secrets.js');
+const { orderDataSchema } = await import('../src/validation/order.js');
+const { addProcessingBatch, processingBatchStart } = await import('../src/lib/processingWeek.js');
+>>>>>>> cd6dd58 (first upload)
 const { EventEmitter } = await import('node:events');
 
 async function waitFor(check, timeoutMs = 5000) {
@@ -165,6 +179,26 @@ describe('order submission', () => {
     const body = await res.json();
     assert.equal(body.status, 'success');
     assert.match(body.orderReference, /^ORA-\d{6}-[0-9A-Z]{6}$/);
+<<<<<<< HEAD
+=======
+    assert.equal(body.referenceNumber, body.orderReference);
+    assert.equal(body.orderStatus, 'pending_review');
+    assert.equal(body.queuePosition, 1);
+    assert.equal(body.batchCapacity, 10);
+    assert.equal(body.capacity, 10);
+    assert.equal(body.batchPosition, 1);
+    assert.equal(body.workStartDate, body.batchDate);
+    assert.match(body.batchDate, /^\d{4}-\d{2}-\d{2}$/);
+    assert.equal(new Date(`${body.batchDate}T00:00:00Z`).getUTCDay(), 6, 'batch starts on Saturday');
+
+    const queueRes = await api(`/api/orders/${body.orderReference}/queue`);
+    assert.equal(queueRes.status, 200);
+    const queueSummary = await queueRes.json();
+    assert.equal(queueSummary.queuePosition, body.queuePosition);
+    assert.equal(queueSummary.batchPosition, body.batchPosition);
+    assert.equal(queueSummary.batchDate, body.batchDate);
+    assert.equal(queueSummary.workStartDate, body.workStartDate);
+>>>>>>> cd6dd58 (first upload)
 
     const [[order]] = await pool.query('SELECT * FROM orders WHERE reference = ?', [body.orderReference]);
     assert.equal(order.full_name, 'منى أحمد');
@@ -187,6 +221,39 @@ describe('order submission', () => {
     assert.equal(onDisk.length, 5);
   });
 
+<<<<<<< HEAD
+=======
+  test('serializes simultaneous submissions at the final Saturday batch slot', async () => {
+    const currentBatch = processingBatchStart(new Date(), config.processingTimeZone);
+    const parsedData = orderDataSchema.parse(validData());
+    let [[{ lastPosition }]] = await pool.query(
+      'SELECT COALESCE(MAX(queue_position), 0) AS lastPosition FROM orders WHERE processing_week = ?',
+      [currentBatch]
+    );
+    while (Number(lastPosition) < 9) {
+      await createOrder({ data: parsedData, files: [], clientIp: null });
+      lastPosition = Number(lastPosition) + 1;
+    }
+
+    const assigned = await Promise.all([
+      createOrder({ data: parsedData, files: [], clientIp: null }),
+      createOrder({ data: parsedData, files: [], clientIp: null }),
+    ]);
+    assert.notEqual(assigned[0].reference, assigned[1].reference, 'unique references stay globally distinct');
+    const thisBatch = assigned.find((order) => order.batchDate === currentBatch);
+    const nextBatch = assigned.find((order) => order.batchDate !== currentBatch);
+    assert.equal(thisBatch?.queuePosition, 10);
+    assert.equal(nextBatch?.batchDate, addProcessingBatch(currentBatch));
+    assert.equal(nextBatch?.queuePosition, 1);
+
+    const [[{ total }]] = await pool.query(
+      'SELECT COUNT(*) AS total FROM orders WHERE processing_week = ?',
+      [currentBatch]
+    );
+    assert.equal(Number(total), 10);
+  });
+
+>>>>>>> cd6dd58 (first upload)
   test('returns field errors keyed like the frontend form', async () => {
     const data = validData();
     data.customer.fullName = '';
@@ -359,6 +426,18 @@ describe('admin API', () => {
     assert.equal(badStatus.status, 400);
   });
 
+<<<<<<< HEAD
+=======
+  test('admin batch summary reports derived delivered and remaining counts', async () => {
+    const res = await api('/api/admin/orders/batches', { ip, headers: auth() });
+    assert.equal(res.status, 200);
+    const { batches } = await res.json();
+    assert.ok(Array.isArray(batches));
+    assert.ok(batches.every((batch) => batch.total === batch.delivered + batch.remaining));
+    assert.ok(batches.every((batch) => batch.fullyDelivered === (batch.remaining === 0)));
+  });
+
+>>>>>>> cd6dd58 (first upload)
   test('shows order detail and serves its files', async () => {
     const res = await api(`/api/admin/orders/${reference}`, { ip, headers: auth() });
     assert.equal(res.status, 200);
@@ -399,7 +478,11 @@ describe('admin API', () => {
     assert.equal(order.status, 'payment_confirmed');
     assert.equal(order.adminNotes, 'Screenshot checked');
 
+<<<<<<< HEAD
     for (const body of [{ status: 'hacked' }, {}, { status: 'shipped', reference: 'x' }]) {
+=======
+    for (const body of [{ status: 'hacked' }, { status: 'delivered' }, {}, { status: 'shipped', reference: 'x' }]) {
+>>>>>>> cd6dd58 (first upload)
       const bad = await api(`/api/admin/orders/${reference}`, {
         method: 'PATCH',
         ip,
@@ -410,6 +493,53 @@ describe('admin API', () => {
     }
   });
 
+<<<<<<< HEAD
+=======
+  test('only an authenticated admin can complete an order and its queue assignment is immutable', async () => {
+    const before = await (await api(`/api/admin/orders/${reference}`, { ip, headers: auth() })).json();
+    const originalWeek = before.order.processingWeek;
+    const originalPosition = before.order.queuePosition;
+
+    const unauthorized = await api(`/api/admin/orders/${reference}/complete`, { method: 'POST', ip });
+    assert.equal(unauthorized.status, 401);
+
+    const completed = await api(`/api/admin/orders/${reference}/complete`, {
+      method: 'POST', ip, headers: auth(),
+    });
+    assert.equal(completed.status, 200);
+    const { order } = await completed.json();
+    assert.equal(order.status, 'completed');
+    assert.ok(order.completedAt);
+    assert.equal(order.processingWeek, originalWeek);
+    assert.equal(order.queuePosition, originalPosition);
+
+    const [[{ maxBefore }]] = await pool.query(
+      'SELECT COALESCE(MAX(queue_position), 0) AS maxBefore FROM orders WHERE processing_week = ?',
+      [originalWeek]
+    );
+    const expectedBatch = Number(maxBefore) < 10 ? originalWeek : addProcessingBatch(originalWeek);
+    const expectedPosition = Number(maxBefore) < 10 ? Number(maxBefore) + 1 : 1;
+    const next = await createOrder({
+      data: orderDataSchema.parse(validData()),
+      files: [],
+      clientIp: null,
+    });
+    assert.equal(next.batchDate, expectedBatch, 'allocate to the earliest batch that still has a slot');
+    assert.equal(new Date(`${next.batchDate}T00:00:00Z`).getUTCDay(), 6, 'new batch starts Saturday');
+    assert.equal(next.queuePosition, expectedPosition, 'completed positions are never reassigned');
+    const [[{ maxPosition }]] = await pool.query(
+      'SELECT MAX(queue_position) AS maxPosition FROM orders WHERE processing_week = ?',
+      [next.batchDate]
+    );
+    assert.equal(Number(maxPosition), next.queuePosition, 'the latest slot is retained and positions are not reused');
+
+    const repeated = await api(`/api/admin/orders/${reference}/complete`, {
+      method: 'POST', ip, headers: auth(),
+    });
+    assert.equal(repeated.status, 200, 'completion is idempotent');
+  });
+
+>>>>>>> cd6dd58 (first upload)
   test('logout invalidates the session', async () => {
     const res = await api('/api/admin/logout', { method: 'POST', ip, headers: auth() });
     assert.equal(res.status, 204);
@@ -453,6 +583,25 @@ describe('new-order email', () => {
     const [logo, ...images] = message.attachments;
     assert.equal(logo.cid, 'ora-logo', 'brand logo embedded in the letterhead');
     assert.match(message.html, /src="cid:ora-logo"/);
+<<<<<<< HEAD
+=======
+    assert.match(message.text, /رقم الطلب في الدفعة: #\d+ من 10/);
+    assert.match(message.text, /سنبدأ العمل على الطلب يوم: السبت/);
+    assert.match(message.text, /دفعة العمل: السبت/);
+    assert.match(message.html, /حالة الطلب ودفعة العمل/);
+    assert.match(message.html, /Mark as Delivered|تأكيد استلام الطلب/);
+    const actionToken = message.text.match(/\/delivery\/action\/([A-Za-z0-9_-]{43})/)?.[1];
+    assert.ok(actionToken, 'email has a 256-bit delivery action link');
+    assert.equal((await orderRow(orderReference)).delivery_action_hash, sha256Hex(actionToken));
+    assert.equal(message.text.includes(actionToken), true, 'raw token is available only in the outbound message');
+    const englishEmail = buildOrderEmail(
+      { reference: orderReference, full_name: 'Test', created_at: new Date(), locale: 'en' },
+      [],
+      () => '',
+      { deliveryActionUrl: `https://ora.example/en/delivery/action/${'A'.repeat(43)}` }
+    );
+    assert.match(englishEmail.html, />Mark as Delivered</);
+>>>>>>> cd6dd58 (first upload)
     assert.equal(images.length, 5);
     assert.equal(images[0].filename, 'payment-screenshot.jpg', 'payment screenshot first');
     assert.ok(images.every((a) => /^[a-z-]+(-\d)?\.(jpg|png|webp)$/.test(a.filename)));
@@ -501,6 +650,12 @@ describe('new-order email', () => {
       reference: 'ORA-260921-AAAAAA',
       full_name: 'A',
       created_at: new Date(),
+<<<<<<< HEAD
+=======
+      processing_week: '2026-10-10',
+      queue_position: 3,
+      status: 'pending_review',
+>>>>>>> cd6dd58 (first upload)
       payment_method: 'instapay',
       locale: 'ar',
       material: 'rosaline',
@@ -511,6 +666,14 @@ describe('new-order email', () => {
     const email = buildOrderEmail(order, [], () => '');
     assert.match(email.html, /بروزالين/);
     assert.match(email.text, /بروزالين/);
+<<<<<<< HEAD
+=======
+    assert.match(email.text, /رقم الطلب في الدفعة: #3 من 10/);
+    assert.match(email.text, /السبت، 10 أكتوبر 2026/);
+    assert.match(email.html, /دفعة العمل/);
+    assert.match(email.html, /قيد المراجعة/);
+    assert.match(email.text, /ORA-260921-AAAAAA/);
+>>>>>>> cd6dd58 (first upload)
   });
 
   test('attachments stay under the email size limit, payment screenshot first', () => {
@@ -543,6 +706,149 @@ describe('new-order email', () => {
   });
 });
 
+<<<<<<< HEAD
+=======
+describe('secure delivery action', () => {
+  async function createActionOrder() {
+    return createOrder({
+      data: orderDataSchema.parse(validData()),
+      files: [],
+      clientIp: null,
+    });
+  }
+
+  async function actionToken(reference) {
+    const token = await createDeliveryActionToken(reference);
+    assert.ok(token);
+    return token;
+  }
+
+  test('valid token previews minimal order details and marks only its order delivered once', async () => {
+    const order = await createActionOrder();
+    const token = await actionToken(order.reference);
+    const preview = await api(`/api/delivery/${token}`);
+    assert.equal(preview.status, 200);
+    const summary = await preview.json();
+    assert.equal(summary.orderReference, order.reference);
+    assert.equal(summary.batchPosition, order.queuePosition);
+    assert.equal(summary.status, 'pending_review');
+    assert.equal('mobileNumber' in summary, false);
+    assert.equal('address' in summary, false);
+
+    const first = await api(`/api/delivery/${token}/confirm`, { method: 'POST' });
+    assert.deepEqual(await first.json(), { status: 'delivered' });
+    const [[row]] = await pool.query(
+      "SELECT status, DATE_FORMAT(delivered_at, '%Y-%m-%d %H:%i:%s') AS delivered_at, delivery_action_used_at FROM orders WHERE reference = ?",
+      [order.reference]
+    );
+    assert.equal(row.status, 'delivered');
+    assert.ok(row.delivered_at, 'delivered_at is generated by the database server');
+    assert.ok(row.delivery_action_used_at);
+
+    const replay = await api(`/api/delivery/${token}/confirm`, { method: 'POST' });
+    assert.deepEqual(await replay.json(), { status: 'already_delivered' });
+    const [[afterReplay]] = await pool.query(
+      "SELECT DATE_FORMAT(delivered_at, '%Y-%m-%d %H:%i:%s') AS delivered_at FROM orders WHERE reference = ?",
+      [order.reference]
+    );
+    assert.equal(afterReplay.delivered_at, row.delivered_at, 'replay preserves the original delivery timestamp');
+  });
+
+  test('invalid and expired tokens cannot modify orders', async () => {
+    const order = await createActionOrder();
+    const invalid = 'A'.repeat(43);
+    assert.equal((await api(`/api/delivery/${invalid}`, { key: null })).status, 401);
+    assert.equal((await api(`/api/delivery/${invalid}`)).status, 404);
+    assert.equal((await api(`/api/delivery/${invalid}/confirm`, { method: 'POST' })).status, 404);
+
+    const token = await actionToken(order.reference);
+    await pool.query(
+      'UPDATE orders SET delivery_action_expires_at = UTC_TIMESTAMP() - INTERVAL 1 SECOND WHERE reference = ?',
+      [order.reference]
+    );
+    assert.equal((await api(`/api/delivery/${token}`)).status, 404);
+    assert.equal((await api(`/api/delivery/${token}/confirm`, { method: 'POST' })).status, 404);
+    const [[row]] = await pool.query('SELECT status, delivered_at FROM orders WHERE reference = ?', [order.reference]);
+    assert.equal(row.status, 'pending_review');
+    assert.equal(row.delivered_at, null);
+  });
+
+  test('token is bound to its order and simultaneous confirms are idempotent', async () => {
+    const orderA = await createActionOrder();
+    const orderB = await createActionOrder();
+    const tokenA = await actionToken(orderA.reference);
+    await actionToken(orderB.reference);
+
+    const [first, second] = await Promise.all([
+      api(`/api/delivery/${tokenA}/confirm?reference=${encodeURIComponent(orderB.reference)}`, { method: 'POST' }),
+      api(`/api/delivery/${tokenA}/confirm?reference=${encodeURIComponent(orderB.reference)}`, { method: 'POST' }),
+    ]);
+    const outcomes = await Promise.all([first.json(), second.json()]);
+    assert.deepEqual(outcomes.map((item) => item.status).sort(), ['already_delivered', 'delivered']);
+    const [[[a]], [[b]]] = await Promise.all([
+      pool.query('SELECT status, queue_position FROM orders WHERE reference = ?', [orderA.reference]),
+      pool.query('SELECT status, queue_position FROM orders WHERE reference = ?', [orderB.reference]),
+    ]);
+    assert.equal(a.status, 'delivered');
+    assert.equal(a.queue_position, orderA.queuePosition, 'delivery does not alter historical batch position');
+    assert.equal(b.status, 'pending_review', 'manipulating another reference cannot change another order');
+  });
+
+  test('unknown capability cannot deliver an order by reference or database id', async () => {
+    const order = await createActionOrder();
+    const res = await api(`/api/delivery/${'0'.repeat(43)}/confirm?reference=${order.reference}&id=1`, { method: 'POST' });
+    assert.equal(res.status, 404);
+    const [[row]] = await pool.query('SELECT status FROM orders WHERE reference = ?', [order.reference]);
+    assert.equal(row.status, 'pending_review');
+  });
+});
+
+describe('batch delivery summaries', () => {
+  test('derives 7/10 and 10/10 progress while retaining all references and positions', async () => {
+    const [[batch]] = await pool.query(
+      `SELECT CAST(processing_week AS CHAR) AS batch_date
+         FROM orders GROUP BY processing_week HAVING COUNT(*) = 10
+        ORDER BY processing_week LIMIT 1`
+    );
+    assert.ok(batch, 'the concurrency test filled at least one complete batch');
+    const [before] = await pool.query(
+      'SELECT reference, queue_position FROM orders WHERE processing_week = ? ORDER BY queue_position',
+      [batch.batch_date]
+    );
+    assert.equal(before.length, 10);
+
+    await pool.query(
+      `UPDATE orders
+          SET status = IF(queue_position <= 7, 'delivered', 'pending_review'),
+              delivered_at = IF(queue_position <= 7, COALESCE(delivered_at, UTC_TIMESTAMP()), NULL)
+        WHERE processing_week = ?`,
+      [batch.batch_date]
+    );
+    let summary = (await listBatchDeliverySummary()).find((item) => item.batchDate === batch.batch_date);
+    assert.deepEqual(
+      { total: summary.total, delivered: summary.delivered, remaining: summary.remaining, fullyDelivered: summary.fullyDelivered },
+      { total: 10, delivered: 7, remaining: 3, fullyDelivered: false }
+    );
+
+    await pool.query(
+      "UPDATE orders SET status = 'delivered', delivered_at = COALESCE(delivered_at, UTC_TIMESTAMP()) WHERE processing_week = ?",
+      [batch.batch_date]
+    );
+    summary = (await listBatchDeliverySummary()).find((item) => item.batchDate === batch.batch_date);
+    assert.deepEqual(
+      { total: summary.total, delivered: summary.delivered, remaining: summary.remaining, fullyDelivered: summary.fullyDelivered },
+      { total: 10, delivered: 10, remaining: 0, fullyDelivered: true }
+    );
+
+    const [after] = await pool.query(
+      'SELECT reference, queue_position FROM orders WHERE processing_week = ? ORDER BY queue_position',
+      [batch.batch_date]
+    );
+    assert.deepEqual(after, before, 'historical orders, references and batch positions remain intact');
+  });
+});
+
+>>>>>>> cd6dd58 (first upload)
 describe('streamed uploads leave nothing behind', () => {
   // Uploads stream to <STORAGE_DIR>/.tmp; a leak there would quietly
   // fill the disk, so every path must clean up after itself.
@@ -584,7 +890,11 @@ describe('streamed uploads leave nothing behind', () => {
 describe('upload concurrency guard', () => {
   // Uploads stream to disk, so this guard bounds disk I/O rather than
   // memory; it must never leak a slot, or the endpoint would jam shut.
+<<<<<<< HEAD
   const fakeRes = () => Object.assign(new EventEmitter(), { set: () => {} });
+=======
+  const fakeRes = () => Object.assign(new EventEmitter(), { set: () => { } });
+>>>>>>> cd6dd58 (first upload)
 
   test('allows up to the limit, refuses the next one, frees slots after', () => {
     const guard = limitConcurrentUploads(2);

@@ -3,6 +3,10 @@ import { config } from '../config.js';
 import { pool } from '../db.js';
 import { storedFilePath } from './fileStorage.js';
 import { buildOrderEmail } from './orderEmail.js';
+<<<<<<< HEAD
+=======
+import { createDeliveryActionToken } from './deliveryService.js';
+>>>>>>> cd6dd58 (first upload)
 
 /**
  * Emails each new order to the shop. The order is already safely saved
@@ -71,7 +75,20 @@ export async function notifyOrder(reference) {
       [order.id]
     );
 
+<<<<<<< HEAD
     const message = buildOrderEmail(order, files, (file) => storedFilePath(reference, file.stored_name));
+=======
+    const deliveryToken = await createDeliveryActionToken(reference);
+    const deliveryActionUrl = deliveryToken
+      ? `${config.publicSiteUrl}/${order.locale === 'ar' ? 'ar' : 'en'}/delivery/action/${deliveryToken}`
+      : null;
+    const message = buildOrderEmail(
+      order,
+      files,
+      (file) => storedFilePath(reference, file.stored_name),
+      { deliveryActionUrl }
+    );
+>>>>>>> cd6dd58 (first upload)
     await getTransport().sendMail({ from: config.mail.from, to: config.mail.to, ...message });
 
     await pool.query(
@@ -88,7 +105,11 @@ export async function notifyOrder(reference) {
           WHERE reference = ?`,
         [reference]
       )
+<<<<<<< HEAD
       .catch(() => {});
+=======
+      .catch(() => { });
+>>>>>>> cd6dd58 (first upload)
     console.error(`[notifier] Email for order ${reference} failed (will retry):`, error.message);
     return false;
   }
@@ -145,7 +166,11 @@ export function startNotificationWorker() {
   if (!config.mail.enabled) {
     console.warn(
       '[notifier] Order emails are OFF: set SMTP_HOST, SMTP_USER, SMTP_PASS and ORDER_NOTIFY_TO in .env. ' +
+<<<<<<< HEAD
         'Orders are still saved.'
+=======
+      'Orders are still saved.'
+>>>>>>> cd6dd58 (first upload)
     );
     return;
   }

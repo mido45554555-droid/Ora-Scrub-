@@ -4,6 +4,10 @@ import { HttpError } from '../lib/httpError.js';
 import { adminLimiter, loginLimiter, requireAdmin } from '../middleware/security.js';
 import {
   ORDER_STATUSES,
+<<<<<<< HEAD
+=======
+  completeOrder,
+>>>>>>> cd6dd58 (first upload)
   findOrderFile,
   getOrder,
   listOrders,
@@ -12,6 +16,10 @@ import {
   updateOrder,
 } from '../services/adminService.js';
 import { storedFilePath } from '../services/fileStorage.js';
+<<<<<<< HEAD
+=======
+import { listBatchDeliverySummary } from '../services/deliveryService.js';
+>>>>>>> cd6dd58 (first upload)
 
 export const adminRouter = Router();
 
@@ -74,10 +82,22 @@ const listSchema = z.object({
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
 });
 
+<<<<<<< HEAD
+=======
+const EDITABLE_ORDER_STATUSES = ORDER_STATUSES.filter((status) => status !== 'delivered');
+
+>>>>>>> cd6dd58 (first upload)
 adminRouter.get('/orders', async (req, res) => {
   res.json(await listOrders(parseOrThrow(listSchema, req.query)));
 });
 
+<<<<<<< HEAD
+=======
+adminRouter.get('/orders/batches', async (_req, res) => {
+  res.json({ batches: await listBatchDeliverySummary() });
+});
+
+>>>>>>> cd6dd58 (first upload)
 adminRouter.get('/orders/:reference', async (req, res) => {
   const order = await getOrder(orderReference(req));
   if (!order) throw new HttpError(404, 'NOT_FOUND', 'Order not found.');
@@ -86,7 +106,11 @@ adminRouter.get('/orders/:reference', async (req, res) => {
 
 const updateSchema = z
   .object({
+<<<<<<< HEAD
     status: z.enum(ORDER_STATUSES).optional(),
+=======
+    status: z.enum(EDITABLE_ORDER_STATUSES).optional(),
+>>>>>>> cd6dd58 (first upload)
     adminNotes: z
       .string()
       .max(2000)
@@ -108,6 +132,17 @@ adminRouter.patch('/orders/:reference', async (req, res) => {
   res.json({ order: await getOrder(reference) });
 });
 
+<<<<<<< HEAD
+=======
+adminRouter.post('/orders/:reference/complete', async (req, res) => {
+  const reference = orderReference(req);
+  if (!(await completeOrder(reference))) {
+    throw new HttpError(404, 'NOT_FOUND', 'Order not found.');
+  }
+  res.json({ order: await getOrder(reference) });
+});
+
+>>>>>>> cd6dd58 (first upload)
 adminRouter.get('/orders/:reference/files/:fileId', async (req, res) => {
   const reference = orderReference(req);
   const { fileId } = req.params;
