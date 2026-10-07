@@ -5,7 +5,7 @@ import { BACKEND_ROOT } from '../config.js';
 /**
  * Builds the Arabic "new order" email sent to the shop, laid out like
  * an order sheet / invoice. Pure function: takes an order row + its
- * file rows, returns a nodemailer message.
+ * file rows, returns a message payload for the email provider.
  *
  * Written with tables and inline styles because that is what email
  * clients (Gmail, Outlook) reliably render — flexbox, grid and <style>
@@ -179,7 +179,7 @@ function measurementTable(order) {
  * @param {object} order   row from `orders`
  * @param {object[]} files rows from `order_files`
  * @param {(file: object) => import('node:stream').Readable | string} readFile
- *   returns the file's content (a path or stream) for nodemailer
+ *   returns the file's content or path for the email provider
  */
 export function buildOrderEmail(order, files, readFile, { deliveryActionUrl = null } = {}) {
   const { attached, skipped } = chooseAttachments(files, readFile);

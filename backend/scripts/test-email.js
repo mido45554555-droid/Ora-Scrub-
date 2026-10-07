@@ -8,28 +8,19 @@ import { sendTestEmail, stopNotificationWorker } from '../src/services/notifier.
 
 const HINTS = [
   [
-    /BadCredentials|Invalid login|535/i,
-    'Gmail refused the login. SMTP_PASS must be a 16-character App Password\n' +
-      '(https://myaccount.google.com/apppasswords), not the normal Gmail password,\n' +
-      'and 2-Step Verification must be on for that account.',
+    /Resend API request failed \(401\)|invalid_api_key/i,
+    'Resend rejected the API key. Check RESEND_API_KEY in the backend environment.',
   ],
-  [
-    /ETIMEDOUT|ECONNREFUSED|ENOTFOUND|EAI_AGAIN/i,
-    'Could not reach the mail server. Check the internet connection, SMTP_HOST/SMTP_PORT,\n' +
-      'and whether a firewall is blocking outgoing mail ports (465 / 587).',
-  ],
-  [/ESOCKET|wrong version number|SSL/i, 'Port/encryption mismatch: use 465 with SMTP_SECURE=true, or 587 with SMTP_SECURE=false.'],
+  [/Resend API request failed \(403\)|invalid_from_address/i, 'Check that MAIL_FROM uses an address on a domain verified in Resend.'],
 ];
 
 if (!config.mail.enabled) {
-  const missing = ['SMTP_HOST', 'SMTP_USER', 'SMTP_PASS', 'ORDER_NOTIFY_TO'].filter(
-    (name) => !process.env[name]
-  );
+  const missing = ['RESEND_API_KEY', 'MAIL_FROM', 'ORDER_NOTIFY_TO'].filter((name) => !process.env[name]);
   console.error(`Email is off — missing in backend/.env: ${missing.join(', ')}`);
   process.exit(1);
 }
 
-console.log(`Logging in to ${config.mail.smtp.host} as ${config.mail.smtp.auth.user} …`);
+console.log(`Sending a test email through Resend from ${config.mail.from} …`);
 
 try {
   const info = await sendTestEmail();

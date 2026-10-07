@@ -35,13 +35,9 @@ const envSchema = z.object({
   // is no longer a factor since uploads are streamed, not buffered).
   UPLOAD_CONCURRENCY: z.coerce.number().int().positive().max(512).default(64),
 
-  // New-order email. All optional: if SMTP isn't configured, orders are
+  // New-order email. All optional: if Resend isn't configured, orders are
   // still saved and the email step is skipped with a warning.
-  SMTP_HOST: z.string().default(''),
-  SMTP_PORT: z.coerce.number().int().min(1).max(65535).default(465),
-  SMTP_SECURE: z.enum(['true', 'false']).default('true'),
-  SMTP_USER: z.string().default(''),
-  SMTP_PASS: z.string().default(''),
+  RESEND_API_KEY: z.string().default(''),
   MAIL_FROM: z.string().default(''),
   ORDER_NOTIFY_TO: z.string().default(''),
 });
@@ -84,16 +80,9 @@ function loadConfig() {
     orderGlobalRateLimit: env.ORDER_GLOBAL_RATE_LIMIT,
     uploadConcurrency: env.UPLOAD_CONCURRENCY,
     mail: {
-      enabled: Boolean(env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS && env.ORDER_NOTIFY_TO),
-      smtp: {
-        host: env.SMTP_HOST,
-        port: env.SMTP_PORT,
-        secure: env.SMTP_SECURE === 'true',
-        // Gmail shows App Passwords as "abcd efgh ijkl mnop"; spaces are
-        // not part of the password.
-        auth: { user: env.SMTP_USER, pass: env.SMTP_PASS.replace(/\s+/g, '') },
-      },
-      from: env.MAIL_FROM || (env.SMTP_USER ? `ORA Orders <${env.SMTP_USER}>` : ''),
+      enabled: Boolean(env.RESEND_API_KEY && env.MAIL_FROM && env.ORDER_NOTIFY_TO),
+      apiKey: env.RESEND_API_KEY,
+      from: env.MAIL_FROM,
       to: env.ORDER_NOTIFY_TO.split(',')
         .map((address) => address.trim())
         .filter(Boolean),

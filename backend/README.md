@@ -71,24 +71,31 @@ email is in Arabic, has all the order details, and attaches the images
 with the payment screenshot first. Gmail's size limit caps attachments
 at about 17 MB; any image left out stays on the server.
 
-To turn it on with Gmail (free, 500 emails/day):
+To send through Resend, create an API key and verify the sending domain.
+In Railway, set:
 
-1. Sign in as orascrubs@gmail.com and turn on
-   [2-Step Verification](https://myaccount.google.com/signinoptions/two-step-verification).
-2. Create an App Password at <https://myaccount.google.com/apppasswords>.
-3. Paste it into `SMTP_PASS=` in `.env`, then check it with:
+```text
+RESEND_API_KEY=<Resend API key>
+ORDER_NOTIFY_TO=orascrubs@gmail.com
+MAIL_FROM=ORA Orders <orders@your-verified-domain.example>
+```
+
+`ORDER_NOTIFY_TO` accepts comma-separated destination addresses. Resend
+requires the domain in `MAIL_FROM` to be verified before production sending;
+add the SPF/DKIM DNS records shown in your Resend dashboard. The Gmail
+SMTP/OAuth variables are not used.
+
+After deploying, check Railway logs for `Order emails enabled via Resend`,
+then verify delivery with:
 
    ```bash
-   npm run mail:test     # logs in and sends one test email
+   npm run mail:test     # sends one test email through Resend
    ```
-
-   Restart the backend; it should log `Order emails ON → orascrubs@gmail.com`.
 
 The order is saved **before** any email is attempted, so a mail problem
 never loses an order or shows the customer an error. Failed emails are
 retried automatically: after 5, 10, 15... minutes, capped at one hour
 between tries, for up to 3 days. Each order is emailed exactly once.
-To use Brevo instead, see the comments in `.env.example`.
 
 ### Tests
 

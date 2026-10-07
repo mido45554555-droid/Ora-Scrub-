@@ -16,11 +16,10 @@ process.env.DB_NAME ??= 'ora_scrubs_test';
 process.env.STORAGE_DIR = './test-storage';
 process.env.ORDER_RATE_LIMIT = '1000';
 process.env.ORDER_GLOBAL_RATE_LIMIT = '1000';
-// Never send real email from tests, even once .env has SMTP credentials;
+// Never send real email from tests, even once .env has Resend credentials;
 // the email tests inject a fake transport instead.
-process.env.SMTP_HOST = '';
-process.env.SMTP_PASS = '';
-process.env.SMTP_USER = 'orders@example.test';
+process.env.RESEND_API_KEY = '';
+process.env.MAIL_FROM = '';
 process.env.ORDER_NOTIFY_TO = 'shop@example.test';
 
 const { config } = await import('../src/config.js');
