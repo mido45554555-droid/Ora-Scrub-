@@ -1,5 +1,4 @@
 import path from 'node:path';
-import { Resend } from 'resend';
 
 function mapAttachment(attachment) {
   const { content, path: attachmentPath, cid, contentType, ...rest } = attachment;
@@ -13,11 +12,20 @@ function mapAttachment(attachment) {
   };
 }
 
-export function createResendTransport(apiKey, client = new Resend(apiKey)) {
+export function createResendTransport(apiKey, client = null) {
+  let clientPromise = null;
+
+  async function getClient() {
+    if (client) return client;
+    clientPromise ??= import('resend').then(({ Resend }) => new Resend(apiKey));
+    return clientPromise;
+  }
+
   return {
     async sendMail(message) {
       const { attachments = [], ...email } = message;
-      const { data, error } = await client.emails.send({
+      const resend = await getClient();
+      const { data, error } = await resend.emails.send({
         ...email,
         attachments: attachments.map(mapAttachment),
       });

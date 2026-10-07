@@ -11,9 +11,8 @@ import { ordersRouter } from './routes/orders.js';
 export function createApp(options = {}) {
   const app = express();
 
-  // Only the Next.js proxy talks to this server, and it passes the real
-  // client IP in X-Client-IP (see requireInternalKey) — so X-Forwarded-For
-  // is deliberately NOT trusted.
+  // The service binds on all interfaces for Railway; only the Next.js proxy
+  // can access protected routes, and X-Forwarded-For is deliberately NOT trusted.
   app.set('trust proxy', false);
   app.set('query parser', 'simple');
 

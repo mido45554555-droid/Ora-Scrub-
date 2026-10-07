@@ -8,9 +8,8 @@ import { mintDeviceToken, readDeviceToken } from '../lib/deviceToken.js';
 
 /**
  * Every /api route except /api/health requires the shared secret that
- * only the Next.js server knows. Combined with listening on 127.0.0.1,
- * this means browsers can only reach the backend through the site's own
- * proxy route.
+ * only the Next.js server knows. This lets the service bind on all
+ * interfaces for Railway while protecting API routes from direct callers.
  *
  * Also works out the real client IP: once the caller has proven it's
  * our proxy, its X-Client-IP header is trusted (it's the only one that

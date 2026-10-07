@@ -155,7 +155,7 @@ export function startNotificationWorker() {
 
   const sweep = () =>
     runNotificationSweep().catch((error) => console.error('[notifier] Sweep failed:', error.message));
-  sweep(); // catch up on anything missed while the server was down
+  // Retry sweeps start on the first interval; startup never sends email.
   sweepTimer = setInterval(sweep, SWEEP_INTERVAL_MS);
   sweepTimer.unref();
 }

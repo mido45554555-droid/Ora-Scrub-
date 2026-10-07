@@ -7,7 +7,7 @@ ORA website and lets the shop's admins review them.
 Browser ──► Next.js  /api/order  (frontend/app/api/order/route.ts)
                │  adds X-Internal-Api-Key + X-Client-IP, streams the upload
                ▼
-            this backend on 127.0.0.1:4000 ──► MariaDB (orders, files, admins)
+            this backend on :4000 ──► MariaDB (orders, files, admins)
                                            └─► storage/<reference>/<uuid>.<ext>
 ```
 
@@ -151,8 +151,9 @@ Images: JPG, PNG or WEBP, 5 MB each.
 
 ## Security measures
 
-- **Not reachable from outside:** listens on `127.0.0.1` only, and every
-  route needs the shared key from the Next.js proxy (compared in constant time).
+- **Protected API:** binds on all interfaces for Railway's service proxy;
+  every API route except the rate-limited health check requires the shared
+  key from the Next.js proxy (compared in constant time).
 - **Validation on the server:** every field is checked again with zod (the
   browser check can be bypassed), with the same limits as the form plus
   length caps. Control characters are stripped.

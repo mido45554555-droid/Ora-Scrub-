@@ -73,3 +73,12 @@ test('Resend transport rejects a success response without an email ID', async ()
     /Resend API response did not include an email ID/
   );
 });
+
+test('Resend client initialization is deferred until an email is sent', async () => {
+  const transport = createResendTransport('');
+
+  await assert.rejects(
+    transport.sendMail({ from: 'orders@example.test', to: ['shop@example.test'], subject: 'Test', text: 'Test' }),
+    /Missing API key/
+  );
+});
