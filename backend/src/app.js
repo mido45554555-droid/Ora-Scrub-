@@ -4,10 +4,7 @@ import { pool } from './db.js';
 import { errorHandler, notFound } from './middleware/errors.js';
 import { attachDevice, healthLimiter, noStore, orderSubmissionLimiter, requireInternalKey } from './middleware/security.js';
 import { adminRouter } from './routes/admin.js';
-<<<<<<< HEAD
-=======
 import { deliveryRouter } from './routes/delivery.js';
->>>>>>> cd6dd58 (first upload)
 import { ordersRouter } from './routes/orders.js';
 
 /** @param {{ orderLimiters?: import('express').RequestHandler[] }} [options] */
@@ -43,10 +40,7 @@ export function createApp(options = {}) {
 
   app.use('/api', requireInternalKey);
   app.use('/api/orders', attachDevice, options.orderLimiters ?? orderSubmissionLimiter, ordersRouter);
-<<<<<<< HEAD
-=======
   app.use('/api/delivery', deliveryRouter);
->>>>>>> cd6dd58 (first upload)
   app.use('/api/admin', adminRouter);
 
   app.use(notFound);

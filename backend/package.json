@@ -12,10 +12,7 @@
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "setup": "node scripts/setup.js",
-<<<<<<< HEAD
-=======
     "migrate:delivery": "node scripts/migrate-delivery.js",
->>>>>>> cd6dd58 (first upload)
     "create-admin": "node scripts/create-admin.js",
     "test": "node --test --test-concurrency=1 \"test/**/*.test.js\"",
     "mail:test": "node scripts/test-email.js"
@@ -29,8 +26,4 @@
     "nodemailer": "^10.0.10",
     "zod": "^3.25.76"
   }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> cd6dd58 (first upload)

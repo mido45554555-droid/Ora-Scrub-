@@ -21,8 +21,6 @@ const LOGO_CID = 'ora-logo';
 
 const PAYMENT_METHODS = { vodafone_cash: 'فودافون كاش', instapay: 'إنستاباي' };
 const LOCALES = { ar: 'العربية', en: 'English' };
-<<<<<<< HEAD
-=======
 const ORDER_STATUSES = {
   pending_review: 'قيد المراجعة',
   payment_confirmed: 'تم تأكيد الدفع',
@@ -32,7 +30,6 @@ const ORDER_STATUSES = {
   cancelled: 'ملغي',
   completed: 'مكتمل',
 };
->>>>>>> cd6dd58 (first upload)
 const MATERIAL_LABELS = {
   rosaline: 'بروزالين',
   angelica: 'أنجيليكا',
@@ -97,8 +94,6 @@ function formatCairoTime(date) {
   }).format(date);
 }
 
-<<<<<<< HEAD
-=======
 function formatBatchDate(value) {
   if (!value) return '—';
   const isoDate = value instanceof Date ? value.toISOString().slice(0, 10) : String(value).slice(0, 10);
@@ -108,7 +103,6 @@ function formatBatchDate(value) {
   }).format(new Date(`${isoDate}T00:00:00.000Z`));
 }
 
->>>>>>> cd6dd58 (first upload)
 /** Picks attachments in priority order without exceeding the size cap. */
 function chooseAttachments(files, readFile) {
   const attached = [];
@@ -187,12 +181,6 @@ function measurementTable(order) {
  * @param {(file: object) => import('node:stream').Readable | string} readFile
  *   returns the file's content (a path or stream) for nodemailer
  */
-<<<<<<< HEAD
-export function buildOrderEmail(order, files, readFile) {
-  const { attached, skipped } = chooseAttachments(files, readFile);
-  const createdAt = formatCairoTime(new Date(order.created_at));
-  const paymentMethod = PAYMENT_METHODS[order.payment_method] ?? order.payment_method;
-=======
 export function buildOrderEmail(order, files, readFile, { deliveryActionUrl = null } = {}) {
   const { attached, skipped } = chooseAttachments(files, readFile);
   const createdAt = formatCairoTime(new Date(order.created_at));
@@ -208,7 +196,6 @@ export function buildOrderEmail(order, files, readFile, { deliveryActionUrl = nu
     ['دفعة العمل', batchDate],
     ['السعة القصوى للدفعة', '10 طلبات'],
   ];
->>>>>>> cd6dd58 (first upload)
   const hasLogo = attached.some((file) => file.cid === LOGO_CID);
 
   const customerRows = [
@@ -234,16 +221,12 @@ export function buildOrderEmail(order, files, readFile, { deliveryActionUrl = nu
   const text = [
     `ORA — طلب جديد`,
     `رقم الطلب: ${order.reference}`,
-<<<<<<< HEAD
-    `التاريخ: ${createdAt}`,
-=======
     `حالة الطلب: ${orderStatus}`,
     `رقم الطلب في الدفعة: #${order.queue_position ?? '—'} من 10`,
     `سنبدأ العمل على الطلب يوم: ${batchDate}`,
     `دفعة العمل: ${batchDate}`,
     `تاريخ ووقت استلام الطلب (بتوقيت القاهرة): ${createdAt}`,
     ...(deliveryActionUrl ? ['', `${deliveryActionLabel}: ${deliveryActionUrl}`] : []),
->>>>>>> cd6dd58 (first upload)
     '',
     'بيانات العميل',
     ...customerRows.map(([label, value]) => `- ${label}: ${value}`),
@@ -287,10 +270,7 @@ export function buildOrderEmail(order, files, readFile, { deliveryActionUrl = nu
                 <td align="left" style="vertical-align:middle;font-family:Tahoma,Arial,sans-serif">
                   <div style="font-size:12px;color:${C.muted}">طلب جديد</div>
                   <div style="font-size:20px;font-weight:bold;color:${C.ink};direction:ltr">${escapeHtml(order.reference)}</div>
-<<<<<<< HEAD
-=======
                   <div style="font-size:11px;color:${C.muted};padding-top:4px">تاريخ ووقت استلام الطلب (بتوقيت القاهرة)</div>
->>>>>>> cd6dd58 (first upload)
                   <div style="font-size:12px;color:${C.muted};padding-top:2px">${escapeHtml(createdAt)}</div>
                 </td>
               </tr>
@@ -310,12 +290,9 @@ export function buildOrderEmail(order, files, readFile, { deliveryActionUrl = nu
         ${sectionTitle('بيانات العميل')}
         ${detailTable(customerRows)}
 
-<<<<<<< HEAD
-=======
         ${sectionTitle('حالة الطلب ودفعة العمل')}
         ${detailTable(queueRows)}
 
->>>>>>> cd6dd58 (first upload)
         ${sectionTitle('المقاسات')}
         ${measurementTable(order)}
 
@@ -347,13 +324,10 @@ export function buildOrderEmail(order, files, readFile, { deliveryActionUrl = nu
       : ''
     }
 
-<<<<<<< HEAD
-=======
         ${deliveryActionUrl ? `<tr><td align="center" style="padding:24px 24px 4px">
           <a href="${escapeHtml(deliveryActionUrl)}" style="display:inline-block;padding:13px 24px;background:${C.goldDeep};border:1px solid ${C.goldDeep};border-radius:3px;color:${C.white};font-family:Tahoma,Arial,sans-serif;font-size:14px;font-weight:bold;text-decoration:none">${escapeHtml(deliveryActionLabel)}</a>
         </td></tr>` : ''}
 
->>>>>>> cd6dd58 (first upload)
         <tr>
           <td style="padding:22px 24px 26px;font-family:Tahoma,Arial,sans-serif;font-size:11px;color:${C.muted}">
             <div style="border-top:1px solid ${C.line};padding-top:12px">

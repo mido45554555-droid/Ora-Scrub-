@@ -8,19 +8,15 @@ export type PaymentMethod = 'vodafone_cash' | 'instapay';
 
 /** Successful response from POST /api/order. */
 export interface OrderSubmissionResult {
-<<<<<<< HEAD
   orderReference: string;
   status: 'success';
-=======
-  referenceNumber: string;
-  orderReference: string;
-  status: 'success';
-  orderStatus: string;
-  batchDate: string;
-  workStartDate: string;
-  batchPosition: number;
-  batchCapacity: number;
-  queuePosition: number;
-  capacity: number;
->>>>>>> cd6dd58 (first upload)
+  /** Additional queue details returned by deployments that include them. */
+  referenceNumber?: string;
+  orderStatus?: string;
+  batchDate?: string;
+  workStartDate?: string;
+  batchPosition?: number;
+  batchCapacity?: number;
+  queuePosition?: number;
+  capacity?: number;
 }

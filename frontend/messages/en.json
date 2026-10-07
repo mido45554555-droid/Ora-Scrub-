@@ -25,16 +25,7 @@
   },
   "orderConfirmation": {
     "title": "Order received",
-<<<<<<< HEAD
     "body": "Thank you — ORA has received your order details.",
-    "referenceLabel": "Order reference",
-    "missingReference": "We couldn't find an order reference. If you just submitted an order, please check your details and try again.",
-    "backToHome": "Back to home"
-  },
-  "contactPage": {
-    "title": "Contact"
-=======
-    "body": "Your order has been received successfully.",
     "referenceLabel": "Order reference",
     "queuePosition": "Your position: #{position} / {capacity}",
     "orderReceivedAt": "Received: {date} (Cairo time).",
@@ -70,10 +61,7 @@
   },
   "contactPage": {
     "title": "Contact",
-    "intro": "Get in touch with ORA.",
-    "instagram": "Follow us on Instagram",
-    "whatsapp": "Chat with us on WhatsApp"
->>>>>>> cd6dd58 (first upload)
+    "intro": "Get in touch with ORA."
   },
   "home": {
     "hero": {

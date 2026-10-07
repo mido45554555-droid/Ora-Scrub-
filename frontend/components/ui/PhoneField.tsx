@@ -1,22 +1,15 @@
 'use client';
 
-<<<<<<< HEAD
-import { useId, useMemo } from 'react';
-=======
 import { useId, useMemo, useSyncExternalStore } from 'react';
->>>>>>> cd6dd58 (first upload)
 import { useLocale } from 'next-intl';
 import { cn } from '@/lib/cn';
 import { COUNTRIES, flagEmoji, findCountry } from '@/lib/data/countries';
 import { FieldShell, controlClasses, fieldIds } from './FieldShell';
 
-<<<<<<< HEAD
-=======
 const subscribeToHydration = () => () => { };
 const getClientHydrationSnapshot = () => true;
 const getServerHydrationSnapshot = () => false;
 
->>>>>>> cd6dd58 (first upload)
 interface PhoneFieldProps {
   label: string;
   hint?: string;
@@ -35,13 +28,9 @@ interface PhoneFieldProps {
 /**
  * Country dial code + national number. A real <select> (not a custom
  * dropdown) so it uses the phone's native picker and keyboard
-<<<<<<< HEAD
- * type-ahead, and country names come from Intl.DisplayNames in the
- * page's language — no translated country list to maintain.
-=======
- * type-ahead. Country names use Intl.DisplayNames after hydration so
- * differing server/browser locale data cannot change the initial HTML.
->>>>>>> cd6dd58 (first upload)
+ * type-ahead. Country names come from Intl.DisplayNames in the page's
+ * language after hydration, avoiding server/browser locale-data mismatches
+ * without maintaining a translated country list.
  */
 export function PhoneField({
   label,
@@ -56,31 +45,17 @@ export function PhoneField({
   onNumberChange,
 }: PhoneFieldProps) {
   const locale = useLocale();
-<<<<<<< HEAD
-=======
   const hasHydrated = useSyncExternalStore(
     subscribeToHydration,
     getClientHydrationSnapshot,
     getServerHydrationSnapshot
   );
->>>>>>> cd6dd58 (first upload)
   const fieldId = useId();
   const selectId = `${fieldId}-country`;
   const { describedBy } = fieldIds(fieldId, hint, error);
 
   const options = useMemo(() => {
     let displayNames: Intl.DisplayNames | undefined;
-<<<<<<< HEAD
-    try {
-      displayNames = new Intl.DisplayNames([locale], { type: 'region' });
-    } catch {
-      displayNames = undefined;
-    }
-
-    // Keep the source order stable so SSR and client hydration render the
-    // same list. Sorting by localized region names makes the DOM order depend
-    // on runtime locale data and can flip between server and client.
-=======
     if (hasHydrated) {
       try {
         displayNames = new Intl.DisplayNames([locale], { type: 'region' });
@@ -89,18 +64,12 @@ export function PhoneField({
       }
     }
 
-    // ISO codes are deterministic during SSR and the client's first render;
-    // localized names are applied once the browser has hydrated.
->>>>>>> cd6dd58 (first upload)
+    // Keep ISO source order stable while labels change after hydration.
     return COUNTRIES.map((entry) => ({
       ...entry,
       name: displayNames?.of(entry.iso) ?? entry.iso,
     }));
-<<<<<<< HEAD
-  }, [locale]);
-=======
   }, [hasHydrated, locale]);
->>>>>>> cd6dd58 (first upload)
 
   const selected = findCountry(country);
 

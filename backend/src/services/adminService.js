@@ -11,10 +11,7 @@ export const ORDER_STATUSES = [
   'shipped',
   'delivered',
   'cancelled',
-<<<<<<< HEAD
-=======
   'completed',
->>>>>>> cd6dd58 (first upload)
 ];
 
 // ---------------------------------------------------------------------------
@@ -76,12 +73,9 @@ function escapeLike(value) {
 }
 
 function toOrderSummary(row) {
-<<<<<<< HEAD
-=======
   const batchDate = row.processing_week instanceof Date
     ? row.processing_week.toISOString().slice(0, 10)
     : row.processing_week;
->>>>>>> cd6dd58 (first upload)
   return {
     reference: row.reference,
     status: row.status,
@@ -89,8 +83,6 @@ function toOrderSummary(row) {
     fullName: row.full_name,
     mobileNumber: row.mobile_number,
     paymentMethod: row.payment_method,
-<<<<<<< HEAD
-=======
     // Keep processingWeek as a compatibility alias; new assignments are Saturdays.
     processingWeek: batchDate,
     batchDate,
@@ -99,7 +91,6 @@ function toOrderSummary(row) {
     queuePosition: row.queue_position,
     completedAt: row.completed_at,
     deliveredAt: row.delivered_at,
->>>>>>> cd6dd58 (first upload)
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -161,12 +152,8 @@ export async function listOrders({ status, q, page, pageSize }) {
 
   const [[{ total }]] = await pool.query(`SELECT COUNT(*) AS total FROM orders ${whereSql}`, params);
   const [rows] = await pool.query(
-<<<<<<< HEAD
-    `SELECT reference, status, locale, full_name, mobile_number, payment_method, created_at, updated_at
-=======
     `SELECT reference, status, locale, full_name, mobile_number, payment_method,
           processing_week, queue_position, completed_at, delivered_at, created_at, updated_at
->>>>>>> cd6dd58 (first upload)
        FROM orders ${whereSql}
       ORDER BY created_at DESC, id DESC
       LIMIT ? OFFSET ?`,
@@ -197,10 +184,6 @@ export async function updateOrder(reference, { status, adminNotes }) {
   const sets = [];
   const params = [];
   if (status !== undefined) {
-<<<<<<< HEAD
-    sets.push('status = ?');
-    params.push(status);
-=======
     if (status === 'delivered') {
       throw new Error('Use the one-time delivery action to mark an order delivered.');
     }
@@ -212,27 +195,20 @@ export async function updateOrder(reference, { status, adminNotes }) {
     if (status === 'cancelled') {
       sets.push('delivery_action_hash = NULL', 'delivery_action_expires_at = NULL');
     }
->>>>>>> cd6dd58 (first upload)
   }
   if (adminNotes !== undefined) {
     sets.push('admin_notes = ?');
     params.push(adminNotes);
   }
 
-<<<<<<< HEAD
-  const [result] = await pool.query(`UPDATE orders SET ${sets.join(', ')} WHERE reference = ?`, [
-=======
   const statusGuard = status !== undefined ? " AND status <> 'delivered'" : '';
   const [result] = await pool.query(`UPDATE orders SET ${sets.join(', ')} WHERE reference = ?${statusGuard}`, [
->>>>>>> cd6dd58 (first upload)
     ...params,
     reference,
   ]);
   return result.affectedRows > 0;
 }
 
-<<<<<<< HEAD
-=======
 /** Completion is idempotent and available only through the authenticated admin router. */
 export async function completeOrder(reference) {
   await pool.query(
@@ -245,7 +221,6 @@ export async function completeOrder(reference) {
   return rows.length > 0;
 }
 
->>>>>>> cd6dd58 (first upload)
 export async function findOrderFile(reference, fileId) {
   const [rows] = await pool.query(
     `SELECT f.stored_name, f.mime_type, f.original_name

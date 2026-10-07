@@ -2,10 +2,7 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/lib/i18n/navigation';
 import { Container, Section } from '@/components/ui/Section';
 import { buttonVariants } from '@/components/ui/Button';
-<<<<<<< HEAD
 import { PlaceholderArt } from '@/components/ui/PlaceholderArt';
-=======
->>>>>>> cd6dd58 (first upload)
 
 export function Hero() {
   const t = useTranslations('home.hero');
@@ -28,19 +25,10 @@ export function Hero() {
           </div>
         </div>
 
-<<<<<<< HEAD
         <div className="order-1 md:order-2">
-          {/* Real product photography goes here once provided — see
-              PlaceholderArt component doc comment. */}
+          {/* Original linework stands in until official product photography is available. */}
           <PlaceholderArt variant="top" className="mx-auto w-full max-w-sm" />
         </div>
-=======
-        {/* Product photo structure hidden until real photography is available.
-        <div className="order-1 md:order-2">
-          <PlaceholderArt variant="top" className="mx-auto w-full max-w-sm" />
-        </div>
-        */}
->>>>>>> cd6dd58 (first upload)
       </Container>
     </Section>
   );

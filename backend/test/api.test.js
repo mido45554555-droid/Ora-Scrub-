@@ -10,13 +10,9 @@ import { fileURLToPath } from 'node:url';
 
 const backendRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 process.env.NODE_ENV = 'test';
-<<<<<<< HEAD
-process.env.DB_NAME = 'ora_scrubs_test';
-=======
 // Keep the default isolated, while allowing callers to select a newly
 // provisioned throwaway database instead of clearing an existing test DB.
 process.env.DB_NAME ??= 'ora_scrubs_test';
->>>>>>> cd6dd58 (first upload)
 process.env.STORAGE_DIR = './test-storage';
 process.env.ORDER_RATE_LIMIT = '1000';
 process.env.ORDER_GLOBAL_RATE_LIMIT = '1000';
@@ -40,14 +36,11 @@ const { buildOrderEmail, MAX_ATTACHMENT_BYTES } = await import('../src/services/
 const { limitConcurrentUploads } = await import('../src/middleware/security.js');
 const { mintDeviceToken, readDeviceToken } = await import('../src/lib/deviceToken.js');
 const { makeOrderLimiters } = await import('../src/middleware/security.js');
-<<<<<<< HEAD
-=======
 const { createOrder } = await import('../src/services/orderService.js');
 const { createDeliveryActionToken, listBatchDeliverySummary } = await import('../src/services/deliveryService.js');
 const { sha256Hex } = await import('../src/lib/secrets.js');
 const { orderDataSchema } = await import('../src/validation/order.js');
 const { addProcessingBatch, processingBatchStart } = await import('../src/lib/processingWeek.js');
->>>>>>> cd6dd58 (first upload)
 const { EventEmitter } = await import('node:events');
 
 async function waitFor(check, timeoutMs = 5000) {
@@ -179,8 +172,6 @@ describe('order submission', () => {
     const body = await res.json();
     assert.equal(body.status, 'success');
     assert.match(body.orderReference, /^ORA-\d{6}-[0-9A-Z]{6}$/);
-<<<<<<< HEAD
-=======
     assert.equal(body.referenceNumber, body.orderReference);
     assert.equal(body.orderStatus, 'pending_review');
     assert.equal(body.queuePosition, 1);
@@ -198,7 +189,6 @@ describe('order submission', () => {
     assert.equal(queueSummary.batchPosition, body.batchPosition);
     assert.equal(queueSummary.batchDate, body.batchDate);
     assert.equal(queueSummary.workStartDate, body.workStartDate);
->>>>>>> cd6dd58 (first upload)
 
     const [[order]] = await pool.query('SELECT * FROM orders WHERE reference = ?', [body.orderReference]);
     assert.equal(order.full_name, 'منى أحمد');
@@ -221,8 +211,6 @@ describe('order submission', () => {
     assert.equal(onDisk.length, 5);
   });
 
-<<<<<<< HEAD
-=======
   test('serializes simultaneous submissions at the final Saturday batch slot', async () => {
     const currentBatch = processingBatchStart(new Date(), config.processingTimeZone);
     const parsedData = orderDataSchema.parse(validData());
@@ -253,7 +241,6 @@ describe('order submission', () => {
     assert.equal(Number(total), 10);
   });
 
->>>>>>> cd6dd58 (first upload)
   test('returns field errors keyed like the frontend form', async () => {
     const data = validData();
     data.customer.fullName = '';
@@ -426,8 +413,6 @@ describe('admin API', () => {
     assert.equal(badStatus.status, 400);
   });
 
-<<<<<<< HEAD
-=======
   test('admin batch summary reports derived delivered and remaining counts', async () => {
     const res = await api('/api/admin/orders/batches', { ip, headers: auth() });
     assert.equal(res.status, 200);
@@ -437,7 +422,6 @@ describe('admin API', () => {
     assert.ok(batches.every((batch) => batch.fullyDelivered === (batch.remaining === 0)));
   });
 
->>>>>>> cd6dd58 (first upload)
   test('shows order detail and serves its files', async () => {
     const res = await api(`/api/admin/orders/${reference}`, { ip, headers: auth() });
     assert.equal(res.status, 200);
@@ -478,11 +462,7 @@ describe('admin API', () => {
     assert.equal(order.status, 'payment_confirmed');
     assert.equal(order.adminNotes, 'Screenshot checked');
 
-<<<<<<< HEAD
-    for (const body of [{ status: 'hacked' }, {}, { status: 'shipped', reference: 'x' }]) {
-=======
     for (const body of [{ status: 'hacked' }, { status: 'delivered' }, {}, { status: 'shipped', reference: 'x' }]) {
->>>>>>> cd6dd58 (first upload)
       const bad = await api(`/api/admin/orders/${reference}`, {
         method: 'PATCH',
         ip,
@@ -493,8 +473,6 @@ describe('admin API', () => {
     }
   });
 
-<<<<<<< HEAD
-=======
   test('only an authenticated admin can complete an order and its queue assignment is immutable', async () => {
     const before = await (await api(`/api/admin/orders/${reference}`, { ip, headers: auth() })).json();
     const originalWeek = before.order.processingWeek;
@@ -539,7 +517,6 @@ describe('admin API', () => {
     assert.equal(repeated.status, 200, 'completion is idempotent');
   });
 
->>>>>>> cd6dd58 (first upload)
   test('logout invalidates the session', async () => {
     const res = await api('/api/admin/logout', { method: 'POST', ip, headers: auth() });
     assert.equal(res.status, 204);
@@ -583,8 +560,6 @@ describe('new-order email', () => {
     const [logo, ...images] = message.attachments;
     assert.equal(logo.cid, 'ora-logo', 'brand logo embedded in the letterhead');
     assert.match(message.html, /src="cid:ora-logo"/);
-<<<<<<< HEAD
-=======
     assert.match(message.text, /رقم الطلب في الدفعة: #\d+ من 10/);
     assert.match(message.text, /سنبدأ العمل على الطلب يوم: السبت/);
     assert.match(message.text, /دفعة العمل: السبت/);
@@ -601,7 +576,6 @@ describe('new-order email', () => {
       { deliveryActionUrl: `https://ora.example/en/delivery/action/${'A'.repeat(43)}` }
     );
     assert.match(englishEmail.html, />Mark as Delivered</);
->>>>>>> cd6dd58 (first upload)
     assert.equal(images.length, 5);
     assert.equal(images[0].filename, 'payment-screenshot.jpg', 'payment screenshot first');
     assert.ok(images.every((a) => /^[a-z-]+(-\d)?\.(jpg|png|webp)$/.test(a.filename)));
@@ -650,12 +624,9 @@ describe('new-order email', () => {
       reference: 'ORA-260921-AAAAAA',
       full_name: 'A',
       created_at: new Date(),
-<<<<<<< HEAD
-=======
       processing_week: '2026-10-10',
       queue_position: 3,
       status: 'pending_review',
->>>>>>> cd6dd58 (first upload)
       payment_method: 'instapay',
       locale: 'ar',
       material: 'rosaline',
@@ -666,14 +637,11 @@ describe('new-order email', () => {
     const email = buildOrderEmail(order, [], () => '');
     assert.match(email.html, /بروزالين/);
     assert.match(email.text, /بروزالين/);
-<<<<<<< HEAD
-=======
     assert.match(email.text, /رقم الطلب في الدفعة: #3 من 10/);
     assert.match(email.text, /السبت، 10 أكتوبر 2026/);
     assert.match(email.html, /دفعة العمل/);
     assert.match(email.html, /قيد المراجعة/);
     assert.match(email.text, /ORA-260921-AAAAAA/);
->>>>>>> cd6dd58 (first upload)
   });
 
   test('attachments stay under the email size limit, payment screenshot first', () => {
@@ -706,8 +674,6 @@ describe('new-order email', () => {
   });
 });
 
-<<<<<<< HEAD
-=======
 describe('secure delivery action', () => {
   async function createActionOrder() {
     return createOrder({
@@ -848,7 +814,6 @@ describe('batch delivery summaries', () => {
   });
 });
 
->>>>>>> cd6dd58 (first upload)
 describe('streamed uploads leave nothing behind', () => {
   // Uploads stream to <STORAGE_DIR>/.tmp; a leak there would quietly
   // fill the disk, so every path must clean up after itself.
@@ -890,11 +855,7 @@ describe('streamed uploads leave nothing behind', () => {
 describe('upload concurrency guard', () => {
   // Uploads stream to disk, so this guard bounds disk I/O rather than
   // memory; it must never leak a slot, or the endpoint would jam shut.
-<<<<<<< HEAD
-  const fakeRes = () => Object.assign(new EventEmitter(), { set: () => {} });
-=======
   const fakeRes = () => Object.assign(new EventEmitter(), { set: () => { } });
->>>>>>> cd6dd58 (first upload)
 
   test('allows up to the limit, refuses the next one, frees slots after', () => {
     const guard = limitConcurrentUploads(2);

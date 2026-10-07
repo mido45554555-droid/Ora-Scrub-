@@ -87,10 +87,7 @@ export function makeOrderLimiters({
     rateLimit({
       windowMs,
       limit: perDevice,
-<<<<<<< HEAD
-=======
       skip: (req) => req.method !== 'POST',
->>>>>>> cd6dd58 (first upload)
       standardHeaders: 'draft-8',
       legacyHeaders: false,
       keyGenerator: (req) => 'device:' + (req.deviceId ?? 'unknown'),
@@ -99,10 +96,7 @@ export function makeOrderLimiters({
     rateLimit({
       windowMs,
       limit: perIp,
-<<<<<<< HEAD
-=======
       skip: (req) => req.method !== 'POST',
->>>>>>> cd6dd58 (first upload)
       standardHeaders: false,
       legacyHeaders: false,
       keyGenerator: (req) => ipKeyGenerator(req.clientIp ?? 'unknown'),
@@ -111,10 +105,7 @@ export function makeOrderLimiters({
     rateLimit({
       windowMs,
       limit: overall,
-<<<<<<< HEAD
-=======
       skip: (req) => req.method !== 'POST',
->>>>>>> cd6dd58 (first upload)
       standardHeaders: false,
       legacyHeaders: false,
       keyGenerator: () => 'all-orders',

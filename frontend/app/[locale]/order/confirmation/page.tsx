@@ -1,16 +1,8 @@
-<<<<<<< HEAD
-import { useTranslations } from 'next-intl';
-import { use } from 'react';
-import { setRequestLocale } from 'next-intl/server';
-=======
 import { getTranslations, setRequestLocale } from 'next-intl/server';
->>>>>>> cd6dd58 (first upload)
 import { Section, Container } from '@/components/ui/Section';
 import { Link } from '@/lib/i18n/navigation';
 import { buttonVariants } from '@/components/ui/Button';
 
-<<<<<<< HEAD
-=======
 type QueueSummary = {
   orderReference: string;
   status: string;
@@ -21,6 +13,12 @@ type QueueSummary = {
   createdAt: string;
   batchCapacity: number;
 };
+
+function isIsoDate(value: unknown): value is string {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(date.valueOf()) && date.toISOString().slice(0, 10) === value;
+}
 
 async function loadQueueSummary(reference: string): Promise<QueueSummary | null> {
   const backendUrl = process.env.ORDER_BACKEND_URL;
@@ -42,6 +40,7 @@ async function loadQueueSummary(reference: string): Promise<QueueSummary | null>
       !body ||
       typeof body !== 'object' ||
       !('orderReference' in body) ||
+      !('status' in body) ||
       !('batchDate' in body) ||
       !('workStartDate' in body) ||
       !('batchPosition' in body) ||
@@ -49,14 +48,21 @@ async function loadQueueSummary(reference: string): Promise<QueueSummary | null>
       !('createdAt' in body) ||
       !('batchCapacity' in body) ||
       typeof body.orderReference !== 'string' ||
-      typeof body.batchDate !== 'string' ||
-      !/^\d{4}-\d{2}-\d{2}$/.test(body.batchDate) ||
-      typeof body.workStartDate !== 'string' ||
+      body.orderReference !== reference ||
+      typeof body.status !== 'string' ||
+      !isIsoDate(body.batchDate) ||
+      !isIsoDate(body.workStartDate) ||
       typeof body.batchPosition !== 'number' ||
+      !Number.isInteger(body.batchPosition) ||
+      body.batchPosition < 1 ||
       typeof body.queuePosition !== 'number' ||
+      !Number.isInteger(body.queuePosition) ||
+      body.queuePosition < 1 ||
       typeof body.createdAt !== 'string' ||
       Number.isNaN(Date.parse(body.createdAt)) ||
-      typeof body.batchCapacity !== 'number'
+      typeof body.batchCapacity !== 'number' ||
+      !Number.isInteger(body.batchCapacity) ||
+      body.batchCapacity < 1
     ) return null;
     return body as QueueSummary;
   } catch {
@@ -64,31 +70,18 @@ async function loadQueueSummary(reference: string): Promise<QueueSummary | null>
   }
 }
 
->>>>>>> cd6dd58 (first upload)
 /**
  * Reads ?ref= from the URL: the order reference the backend returned
  * when OrderForm submitted the order. It's only displayed, never
  * trusted — React escapes it, and nothing here acts on it.
  */
-<<<<<<< HEAD
-export default function OrderConfirmationPage({
-=======
 export default async function OrderConfirmationPage({
->>>>>>> cd6dd58 (first upload)
   params,
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
   searchParams: Promise<{ ref?: string | string[] }>;
 }) {
-<<<<<<< HEAD
-  const { locale } = use(params);
-  setRequestLocale(locale);
-  const t = useTranslations('orderConfirmation');
-  const { ref } = use(searchParams);
-  // ?ref=a&ref=b arrives as an array; only a single value is valid.
-  const reference = typeof ref === 'string' ? ref : undefined;
-=======
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations('orderConfirmation');
@@ -109,7 +102,6 @@ export default async function OrderConfirmationPage({
   }).format(new Date(`${date}T00:00:00.000Z`));
   const formattedWorkStart = queue ? formatBatchDate(queue.workStartDate, 'full') : '';
   const formattedBatchDate = queue ? formatBatchDate(queue.batchDate, 'long') : '';
->>>>>>> cd6dd58 (first upload)
 
   return (
     <Section>
@@ -129,8 +121,6 @@ export default async function OrderConfirmationPage({
                 {reference}
               </p>
             </div>
-<<<<<<< HEAD
-=======
             {queue ? (
               <div className="mx-auto mt-6 max-w-md border border-border bg-field px-6 py-5 text-start">
                 <p className="font-medium text-ink">
@@ -152,7 +142,6 @@ export default async function OrderConfirmationPage({
             ) : (
               <p className="mt-5 text-sm text-ink-muted">{t('queueUnavailable')}</p>
             )}
->>>>>>> cd6dd58 (first upload)
           </>
         ) : (
           <p className="mt-4 text-ink-muted">{t('missingReference')}</p>

@@ -26,11 +26,8 @@ const envSchema = z.object({
   INTERNAL_API_KEY: z.string().min(32, 'INTERNAL_API_KEY must be at least 32 characters'),
   STORAGE_DIR: z.string().default('./storage'),
   ADMIN_SESSION_HOURS: z.coerce.number().positive().max(24 * 30).default(12),
-<<<<<<< HEAD
-=======
   PROCESSING_TIME_ZONE: z.string().default('Africa/Cairo'),
   PUBLIC_SITE_URL: z.string().url().optional(),
->>>>>>> cd6dd58 (first upload)
   ORDER_RATE_LIMIT: z.coerce.number().int().positive().default(5),
   ORDER_IP_RATE_LIMIT: z.coerce.number().int().positive().default(30),
   ORDER_GLOBAL_RATE_LIMIT: z.coerce.number().int().positive().default(100),
@@ -61,13 +58,10 @@ function loadConfig() {
   }
 
   const env = parsed.data;
-<<<<<<< HEAD
-=======
   const publicSiteUrl = env.PUBLIC_SITE_URL ?? (env.NODE_ENV === 'production' ? '' : 'http://localhost:3000');
   if (env.NODE_ENV === 'production' && (!publicSiteUrl || new URL(publicSiteUrl).protocol !== 'https:')) {
     throw new Error('PUBLIC_SITE_URL must be set to the public HTTPS site origin in production.');
   }
->>>>>>> cd6dd58 (first upload)
   return {
     env: env.NODE_ENV,
     isProduction: env.NODE_ENV === 'production',
@@ -83,11 +77,8 @@ function loadConfig() {
     internalApiKey: env.INTERNAL_API_KEY,
     storageDir: path.resolve(BACKEND_ROOT, env.STORAGE_DIR),
     adminSessionMs: env.ADMIN_SESSION_HOURS * 60 * 60 * 1000,
-<<<<<<< HEAD
-=======
     processingTimeZone: env.PROCESSING_TIME_ZONE,
     publicSiteUrl: publicSiteUrl.replace(/\/+$/, ''),
->>>>>>> cd6dd58 (first upload)
     orderRateLimit: env.ORDER_RATE_LIMIT,
     orderIpRateLimit: env.ORDER_IP_RATE_LIMIT,
     orderGlobalRateLimit: env.ORDER_GLOBAL_RATE_LIMIT,
