@@ -12,15 +12,18 @@ const HINTS = [
     'Resend rejected the API key. Check RESEND_API_KEY in the backend environment.',
   ],
   [/Resend API request failed \(403\)|invalid_from_address/i, 'Check that MAIL_FROM uses an address on a domain verified in Resend.'],
+  [/EAUTH|Invalid login|authentication/i, 'Check SMTP_USER and the configured SMTP password with your mail provider.'],
 ];
 
 if (!config.mail.enabled) {
-  const missing = ['RESEND_API_KEY', 'MAIL_FROM', 'ORDER_NOTIFY_TO'].filter((name) => !process.env[name]);
-  console.error(`Email is off — missing in backend/.env: ${missing.join(', ')}`);
+  console.error(
+    'Email is off — configure SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS (or SMTP_PASSWORD), ' +
+      'MAIL_FROM and ORDER_NOTIFY_TO, or configure Resend.'
+  );
   process.exit(1);
 }
 
-console.log(`Sending a test email through Resend from ${config.mail.from} …`);
+console.log(`Sending a test email through ${config.mail.provider} from ${config.mail.from} …`);
 
 try {
   const info = await sendTestEmail();

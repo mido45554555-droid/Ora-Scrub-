@@ -66,31 +66,42 @@ and run the site with `npm run dev` in `../frontend`.
 
 ### New-order emails
 
-Each new order is emailed to `ORDER_NOTIFY_TO` (orascrubs@gmail.com). The
-email is in Arabic, has all the order details, and attaches the images
-with the payment screenshot first. Gmail's size limit caps attachments
-at about 17 MB; any image left out stays on the server.
+Each new order is emailed to `ORDER_NOTIFY_TO`. The Arabic email includes
+the order details and attaches images with the payment screenshot first.
+Attachments are capped at about 17 MB total; any image left out stays on
+the server. Separate multiple recipients with commas.
 
-To send through Resend, create an API key and verify the sending domain.
-In Railway, set:
+SMTP is selected when all required SMTP settings are configured. Set these
+variables on the backend service:
 
 ```text
-RESEND_API_KEY=<Resend API key>
-ORDER_NOTIFY_TO=orascrubs@gmail.com
-MAIL_FROM=ORA Orders <orders@your-verified-domain.example>
+SMTP_HOST=<mail provider SMTP host>
+SMTP_PORT=<mail provider SMTP port>
+SMTP_USER=<mail provider username>
+SMTP_PASS=<mail provider password>
+SMTP_SECURE=<optional true or false; defaults to true on port 465>
+MAIL_FROM=<sender address accepted by your SMTP provider>
+ORDER_NOTIFY_TO=<recipient address or comma-separated recipients>
 ```
 
-`ORDER_NOTIFY_TO` accepts comma-separated destination addresses. Resend
-requires the domain in `MAIL_FROM` to be verified before production sending;
-add the SPF/DKIM DNS records shown in your Resend dashboard. The Gmail
-SMTP/OAuth variables are not used.
+`SMTP_PASSWORD` is also accepted as an alias for `SMTP_PASS`; if both are
+set, their values must match. The provider's SMTP settings determine the
+correct host, port, authentication, and sender policy.
 
-After deploying, check Railway logs for `Order emails enabled via Resend`,
-then verify delivery with:
+If SMTP is not configured, Resend is used when `RESEND_API_KEY`, `MAIL_FROM`,
+and `ORDER_NOTIFY_TO` are set; Resend requires the sender domain to be
+verified and its SPF/DKIM DNS records configured. Any partial SMTP
+configuration fails backend startup validation rather than silently switching
+to Resend. If SMTP delivery fails, the notification retry worker retries
+through SMTP; it does **not** automatically fall back to Resend.
 
-   ```bash
-   npm run mail:test     # sends one test email through Resend
-   ```
+`npm run mail:test` sends a real test email to the configured recipient(s).
+After deployment, check Railway logs for `Order emails enabled via smtp` or
+`Order emails enabled via resend`, then verify delivery by running:
+
+```bash
+npm run mail:test
+```
 
 The order is saved **before** any email is attempted, so a mail problem
 never loses an order or shows the customer an error. Failed emails are

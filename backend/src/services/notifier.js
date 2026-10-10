@@ -4,6 +4,7 @@ import { storedFilePath } from './fileStorage.js';
 import { buildOrderEmail } from './orderEmail.js';
 import { createDeliveryActionToken } from './deliveryService.js';
 import { createResendTransport } from './resendTransport.js';
+import { createSmtpTransport } from './smtpTransport.js';
 
 /**
  * Emails each new order to the shop. The order is already safely saved
@@ -27,7 +28,9 @@ let transport = null;
 let sweepTimer = null;
 
 function getTransport() {
-  transport ??= createResendTransport(config.mail.apiKey);
+  transport ??= config.mail.provider === 'smtp'
+    ? createSmtpTransport(config.mail.smtp)
+    : createResendTransport(config.mail.apiKey);
   return transport;
 }
 
@@ -99,12 +102,12 @@ export async function notifyOrder(reference) {
 }
 
 /**
- * Sends one test message through Resend (npm run mail:test).
+ * Sends one test message through the configured provider (npm run mail:test).
  */
 export async function sendTestEmail() {
   if (!config.mail.enabled) {
     throw new Error(
-      'Email is not configured: set RESEND_API_KEY, MAIL_FROM and ORDER_NOTIFY_TO in backend/.env'
+      'Email is not configured: set SMTP settings or RESEND_API_KEY, along with MAIL_FROM and ORDER_NOTIFY_TO.'
     );
   }
   const info = await getTransport().sendMail({
@@ -146,12 +149,12 @@ export async function runNotificationSweep() {
 export function startNotificationWorker() {
   if (!config.mail.enabled) {
     console.warn(
-      '[notifier] Order emails are OFF: set RESEND_API_KEY, MAIL_FROM and ORDER_NOTIFY_TO in .env. ' +
+      '[notifier] Order emails are OFF: configure SMTP or Resend, plus MAIL_FROM and ORDER_NOTIFY_TO. ' +
       'Orders are still saved.'
     );
     return;
   }
-  console.log(`[notifier] Order emails enabled via Resend → ${config.mail.to.join(', ')}`);
+  console.log(`[notifier] Order emails enabled via ${config.mail.provider} → ${config.mail.to.join(', ')}`);
 
   const sweep = () =>
     runNotificationSweep().catch((error) => console.error('[notifier] Sweep failed:', error.message));

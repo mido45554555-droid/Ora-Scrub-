@@ -74,12 +74,19 @@ npm run dev      # أو: npm run build && npm start
 
 ```
 ORDER_NOTIFY_TO=orascrubs@gmail.com
+MAIL_FROM=ORA Orders <orascrubs@gmail.com>
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=465
 SMTP_SECURE=true
 SMTP_USER=orascrubs@gmail.com
 SMTP_PASS=<App Password من جوجل، 16 حرف>
 ```
+
+`MAIL_FROM` لازم يكون عنوان مسموح للإرسال من مزود SMTP. SMTP بيتحدد لما
+كل إعداداته المطلوبة تكون مكتملة. لو SMTP مش متظبط وبيانات Resend مكتملة،
+المشروع بيستخدم Resend. أي إعداد SMTP ناقص بيوقف تشغيل الباك إند بدل ما
+يتحول تلقائيًا إلى Resend. لو إرسال SMTP فشل، محاولات الإعادة بتفضل عبر SMTP
+ومفيش تحويل تلقائي إلى Resend.
 
 الـ App Password بيتعمل من <https://myaccount.google.com/apppasswords> بعد
 تفعيل التحقق بخطوتين على الحساب، وهو **مش** باسورد الجيميل العادي.
@@ -90,7 +97,8 @@ cd backend
 npm run mail:test     # بيسجل دخول ويبعت رسالة اختبار
 ```
 
-بديل مجاني تاني: Brevo (300 إيميل/يوم) — الإعدادات في تعليقات `.env.example`.
+يمكن استخدام مزود SMTP آخر بإعدادات SMTP الخاصة به؛ راجع تعليمات المزود
+بخصوص الخادم والمنفذ وطريقة المصادقة وعنوان المرسل.
 
 ## حدود الطلبات وكوكي الجهاز
 

@@ -35,8 +35,20 @@ const envSchema = z.object({
   // is no longer a factor since uploads are streamed, not buffered).
   UPLOAD_CONCURRENCY: z.coerce.number().int().positive().max(512).default(64),
 
-  // New-order email. All optional: if Resend isn't configured, orders are
-  // still saved and the email step is skipped with a warning.
+  // New-order email. If neither provider is configured, orders are still
+  // saved and the email step is skipped with a warning.
+  SMTP_HOST: z.string().default(''),
+  SMTP_PORT: z.preprocess(
+    (value) => (value === '' ? undefined : value),
+    z.coerce.number().int().min(1).max(65535).optional()
+  ),
+  SMTP_USER: z.string().default(''),
+  SMTP_PASS: z.string().default(''),
+  SMTP_PASSWORD: z.string().default(''),
+  SMTP_SECURE: z.preprocess(
+    (value) => (value === '' ? undefined : value),
+    z.enum(['true', 'false']).transform((value) => value === 'true').optional()
+  ),
   RESEND_API_KEY: z.string().default(''),
   MAIL_FROM: z.string().default(''),
   ORDER_NOTIFY_TO: z.string().default(''),
@@ -54,6 +66,36 @@ function loadConfig() {
   }
 
   const env = parsed.data;
+  const smtpPassword = env.SMTP_PASS || env.SMTP_PASSWORD;
+  const hasSmtpSettings = Boolean(
+    env.SMTP_HOST ||
+      env.SMTP_PORT ||
+      env.SMTP_USER ||
+      env.SMTP_PASS ||
+      env.SMTP_PASSWORD ||
+      env.SMTP_SECURE !== undefined
+  );
+  if (env.SMTP_PASS && env.SMTP_PASSWORD && env.SMTP_PASS !== env.SMTP_PASSWORD) {
+    throw new Error('Set only one SMTP password value, or make SMTP_PASS and SMTP_PASSWORD match.');
+  }
+  if (
+    hasSmtpSettings &&
+    (!env.SMTP_HOST ||
+      !env.SMTP_PORT ||
+      !env.SMTP_USER ||
+      !smtpPassword ||
+      !env.MAIL_FROM ||
+      !env.ORDER_NOTIFY_TO)
+  ) {
+    throw new Error(
+      'SMTP email configuration requires SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS (or SMTP_PASSWORD), MAIL_FROM and ORDER_NOTIFY_TO.'
+    );
+  }
+  const mailProvider = hasSmtpSettings
+    ? 'smtp'
+    : env.RESEND_API_KEY && env.MAIL_FROM && env.ORDER_NOTIFY_TO
+      ? 'resend'
+      : null;
   const publicSiteUrl = env.PUBLIC_SITE_URL ?? (env.NODE_ENV === 'production' ? '' : 'http://localhost:3000');
   if (env.NODE_ENV === 'production' && (!publicSiteUrl || new URL(publicSiteUrl).protocol !== 'https:')) {
     throw new Error('PUBLIC_SITE_URL must be set to the public HTTPS site origin in production.');
@@ -80,12 +122,22 @@ function loadConfig() {
     orderGlobalRateLimit: env.ORDER_GLOBAL_RATE_LIMIT,
     uploadConcurrency: env.UPLOAD_CONCURRENCY,
     mail: {
-      enabled: Boolean(env.RESEND_API_KEY && env.MAIL_FROM && env.ORDER_NOTIFY_TO),
+      enabled: mailProvider !== null,
+      provider: mailProvider,
       apiKey: env.RESEND_API_KEY,
       from: env.MAIL_FROM,
       to: env.ORDER_NOTIFY_TO.split(',')
         .map((address) => address.trim())
         .filter(Boolean),
+      smtp: mailProvider === 'smtp'
+        ? {
+            host: env.SMTP_HOST,
+            port: env.SMTP_PORT,
+            secure: env.SMTP_SECURE ?? env.SMTP_PORT === 465,
+            user: env.SMTP_USER,
+            password: smtpPassword,
+          }
+        : null,
     },
   };
 }
