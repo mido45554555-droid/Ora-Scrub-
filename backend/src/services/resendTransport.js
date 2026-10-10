@@ -1,14 +1,45 @@
-import path from 'node:path';
+import { readFile } from 'node:fs/promises';
 
-function mapAttachment(attachment) {
-  const { content, path: attachmentPath, cid, contentType, ...rest } = attachment;
-  const source = attachmentPath || (typeof content === 'string' && path.isAbsolute(content) ? content : null);
+function isHttpUrl(value) {
+  return /^https?:\/\//i.test(value);
+}
+
+async function readAttachmentFile(source, filename) {
+  try {
+    return await readFile(source);
+  } catch (error) {
+    const label = filename ? ` "${filename}"` : '';
+    throw new Error(`Unable to read email attachment${label} from "${source}": ${error.message}`, { cause: error });
+  }
+}
+
+async function mapAttachment(attachment) {
+  const {
+    content,
+    path: attachmentPath,
+    cid,
+    contentType,
+    content_type,
+    contentId,
+    content_id,
+    ...rest
+  } = attachment;
+  let mappedPath;
+  let mappedContent = content;
+
+  if (attachmentPath) {
+    if (isHttpUrl(attachmentPath)) {
+      mappedPath = attachmentPath;
+    } else {
+      mappedContent = await readAttachmentFile(attachmentPath, attachment.filename);
+    }
+  }
 
   return {
     ...rest,
-    ...(source ? { path: source } : content !== undefined ? { content } : {}),
-    ...(contentType ? { content_type: contentType } : {}),
-    ...(cid ? { content_id: cid } : {}),
+    ...(mappedPath !== undefined ? { path: mappedPath } : mappedContent !== undefined ? { content: mappedContent } : {}),
+    ...((contentType ?? content_type) !== undefined ? { contentType: contentType ?? content_type } : {}),
+    ...((contentId ?? content_id ?? cid) !== undefined ? { contentId: contentId ?? content_id ?? cid } : {}),
   };
 }
 
@@ -27,7 +58,7 @@ export function createResendTransport(apiKey, client = null) {
       const resend = await getClient();
       const { data, error } = await resend.emails.send({
         ...email,
-        attachments: attachments.map(mapAttachment),
+        attachments: await Promise.all(attachments.map(mapAttachment)),
       });
 
       if (error) {

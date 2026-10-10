@@ -32,7 +32,10 @@ test('SMTP transport passes provider options and the complete email payload', as
     to: ['shop@example.test'],
     subject: 'Order notification',
     text: 'Order details',
-    attachments: [{ filename: 'payment.png', content: Buffer.from('image') }],
+    attachments: [
+      { filename: 'payment.png', path: 'storage/order/extensionless' },
+      { filename: 'logo.png', content: Buffer.from('image'), cid: 'ora-logo', contentType: 'image/png' },
+    ],
   };
 
   const result = await transport.sendMail(message);
@@ -44,6 +47,10 @@ test('SMTP transport passes provider options and the complete email payload', as
     auth: { user: 'test-user', pass: 'test-password' },
   });
   assert.equal(sentMessage, message);
+  assert.deepEqual(sentMessage.attachments, [
+    { filename: 'payment.png', path: 'storage/order/extensionless' },
+    { filename: 'logo.png', content: Buffer.from('image'), cid: 'ora-logo', contentType: 'image/png' },
+  ]);
   assert.deepEqual(result, { messageId: 'smtp-message-id', response: '250 accepted' });
   transport.close();
   assert.equal(closed, true);

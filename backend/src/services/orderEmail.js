@@ -104,7 +104,7 @@ function formatBatchDate(value) {
 }
 
 /** Picks attachments in priority order without exceeding the size cap. */
-function chooseAttachments(files, readFile) {
+function chooseAttachments(files, getFilePath) {
   const attached = [];
   const skipped = [];
   let total = 0;
@@ -126,7 +126,7 @@ function chooseAttachments(files, readFile) {
       attached.push({
         // ASCII names, never the customer's filename.
         filename: `${slug}${suffix}.${extension}`,
-        content: readFile(file),
+        path: getFilePath(file),
         contentType: file.mime_type,
       });
     });
@@ -178,11 +178,11 @@ function measurementTable(order) {
 /**
  * @param {object} order   row from `orders`
  * @param {object[]} files rows from `order_files`
- * @param {(file: object) => import('node:stream').Readable | string} readFile
- *   returns the file's content or path for the email provider
+ * @param {(file: object) => string} getFilePath
+ *   returns the file's storage path for the email provider
  */
-export function buildOrderEmail(order, files, readFile, { deliveryActionUrl = null } = {}) {
-  const { attached, skipped } = chooseAttachments(files, readFile);
+export function buildOrderEmail(order, files, getFilePath, { deliveryActionUrl = null } = {}) {
+  const { attached, skipped } = chooseAttachments(files, getFilePath);
   const createdAt = formatCairoTime(new Date(order.created_at));
   const batchDate = formatBatchDate(order.processing_week);
   const paymentMethod = PAYMENT_METHODS[order.payment_method] ?? order.payment_method;
