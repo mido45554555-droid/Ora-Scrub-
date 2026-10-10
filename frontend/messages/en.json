@@ -61,7 +61,11 @@
   },
   "contactPage": {
     "title": "Contact",
-    "intro": "Get in touch with ORA."
+    "intro": "Get in touch with ORA.",
+    "instagram": "Instagram",
+    "instagramPlaceholder": "Profile URL placeholder — replace with ORA’s official profile.",
+    "whatsapp": "WhatsApp",
+    "whatsappPlaceholder": "Phone number placeholder — replace with ORA’s international number."
   },
   "home": {
     "hero": {

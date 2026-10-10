@@ -1,8 +1,8 @@
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/lib/i18n/navigation';
 import { Container, Section } from '@/components/ui/Section';
 import { buttonVariants } from '@/components/ui/Button';
-import { PlaceholderArt } from '@/components/ui/PlaceholderArt';
 
 export function Hero() {
   const t = useTranslations('home.hero');
@@ -26,8 +26,14 @@ export function Hero() {
         </div>
 
         <div className="order-1 md:order-2">
-          {/* Original linework stands in until official product photography is available. */}
-          <PlaceholderArt variant="top" className="mx-auto w-full max-w-sm" />
+          <Image
+            src="/assets/products/ora-stacked-scrubs.png"
+            alt="ORA scrubs stacked in pastel colors"
+            width={768}
+            height={1151}
+            priority
+            className="mx-auto h-auto w-full max-w-sm"
+          />
         </div>
       </Container>
     </Section>
