@@ -7,6 +7,7 @@ import { PAYMENT_ACCOUNTS } from '@/lib/constants';
 import { findCountry } from '@/lib/data/countries';
 import { FileUploadField } from './FileUploadField';
 import { PaymentMethodCard } from './PaymentMethodCard';
+import { PaymentWarning } from './PaymentWarning';
 import type { RawOrderFormState } from '@/lib/order/formState';
 
 interface OrderBasketProps {
@@ -16,6 +17,8 @@ interface OrderBasketProps {
   onReferencePhotosChange: (files: File[]) => void;
   onPaymentMethodChange: (method: string) => void;
   onScreenshotChange: (file: File | null) => void;
+  paymentWarningOpen: boolean;
+  onDismissPaymentWarning: () => void;
 }
 
 /**
@@ -41,6 +44,8 @@ export function OrderBasket({
   onReferencePhotosChange,
   onPaymentMethodChange,
   onScreenshotChange,
+  paymentWarningOpen,
+  onDismissPaymentWarning,
 }: OrderBasketProps) {
   const t = useTranslations('orderForm.basket');
   const tf = useTranslations('orderForm.fields');
@@ -358,6 +363,11 @@ export function OrderBasket({
                 );
               })}
             </div>
+            {paymentWarningOpen && (
+              <div className="mt-4">
+                <PaymentWarning onDismiss={onDismissPaymentWarning} />
+              </div>
+            )}
             <div className="mt-4">
               <FileUploadField
                 label={tf('screenshot.label')}

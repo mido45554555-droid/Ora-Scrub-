@@ -2,6 +2,7 @@ import { useTranslations } from 'next-intl';
 import { PaymentMethodCard } from './PaymentMethodCard';
 import { FileUploadField } from './FileUploadField';
 import { FormSection } from './FormSection';
+import { PaymentWarning } from './PaymentWarning';
 import { PAYMENT_ACCOUNTS } from '@/lib/constants';
 import type { RawPaymentInfo } from '@/lib/order/formState';
 
@@ -10,6 +11,8 @@ interface PaymentSectionProps {
   errors: Record<string, string>;
   onMethodChange: (method: string) => void;
   onScreenshotChange: (file: File | null) => void;
+  warningOpen: boolean;
+  onDismissWarning: () => void;
 }
 
 const METHODS = ['vodafone_cash', 'instapay'] as const;
@@ -19,6 +22,8 @@ export function PaymentSection({
   errors,
   onMethodChange,
   onScreenshotChange,
+  warningOpen,
+  onDismissWarning,
 }: PaymentSectionProps) {
   const t = useTranslations('orderForm');
   const tf = useTranslations('orderForm.fields');
@@ -75,6 +80,8 @@ export function PaymentSection({
           </p>
         )}
       </fieldset>
+
+      {warningOpen && <PaymentWarning onDismiss={onDismissWarning} />}
 
       <FileUploadField
         label={tf('screenshot.label')}

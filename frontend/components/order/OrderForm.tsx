@@ -20,6 +20,7 @@ import { findCountry, normalizeNationalNumber } from '@/lib/data/countries';
 import type { OrderSubmissionResult } from '@/types/order';
 
 type SubmitState = 'idle' | 'invalid' | 'submitting' | 'failed';
+type PaymentWarningTarget = 'section' | 'basket' | null;
 
 /** Multipart body for POST /api/order — see backend/src/routes/orders.js. */
 function buildOrderFormData(values: RawOrderFormState, locale: string): FormData {
@@ -65,6 +66,7 @@ export function OrderForm() {
     createInitialOrderFormState
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [paymentWarningTarget, setPaymentWarningTarget] = useState<PaymentWarningTarget>(null);
   const [submitState, setSubmitState] = useState<SubmitState>('idle');
   const [failureMessage, setFailureMessage] = useState('');
   const formTopRef = useRef<HTMLDivElement>(null);
@@ -125,11 +127,12 @@ export function OrderForm() {
     }));
   }
 
-  function updatePaymentMethod(method: string) {
+  function updatePaymentMethod(method: string, source: Exclude<PaymentWarningTarget, null>) {
     setValues((prev) => ({
       ...prev,
       payment: { ...prev.payment, method: method as RawOrderFormState['payment']['method'] },
     }));
+    setPaymentWarningTarget(source);
   }
 
   function updateScreenshot(file: File | null) {
@@ -263,8 +266,10 @@ export function OrderForm() {
       <PaymentSection
         values={values.payment}
         errors={errors}
-        onMethodChange={updatePaymentMethod}
+        onMethodChange={(method) => updatePaymentMethod(method, 'section')}
         onScreenshotChange={updateScreenshot}
+        warningOpen={paymentWarningTarget === 'section'}
+        onDismissWarning={() => setPaymentWarningTarget(null)}
       />
 
       <div className="border-t border-border pt-10">
@@ -282,8 +287,10 @@ export function OrderForm() {
         onColorImageChange={updateColorImage}
         onDesignImagesChange={updateDesignImages}
         onReferencePhotosChange={updateReferencePhotos}
-        onPaymentMethodChange={updatePaymentMethod}
+        onPaymentMethodChange={(method) => updatePaymentMethod(method, 'basket')}
         onScreenshotChange={updateScreenshot}
+        paymentWarningOpen={paymentWarningTarget === 'basket'}
+        onDismissPaymentWarning={() => setPaymentWarningTarget(null)}
       />
     </form>
   );

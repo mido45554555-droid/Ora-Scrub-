@@ -1,12 +1,15 @@
 import { useTranslations } from 'next-intl';
 import { Link } from '@/lib/i18n/navigation';
 import { Container } from '@/components/ui/Section';
+import { SocialIcon } from '@/components/ui/SocialIcon';
+import { INSTAGRAM_PROFILE_URL, WHATSAPP_CONTACT_URL } from '@/lib/contactLinks';
 import { LanguageSwitcher } from './LanguageSwitcher';
 
 export function Footer() {
   const t = useTranslations('footer');
   const tNav = useTranslations('nav');
   const tBrand = useTranslations('brand');
+  const tContact = useTranslations('contactPage');
   const year = new Date().getFullYear();
 
   return (
@@ -44,11 +47,26 @@ export function Footer() {
           <p className="text-xs font-medium tracking-wide text-ink-muted">
             {t('contactHeading')}
           </p>
-          {/* Real phone/address/social data intentionally omitted until
-              provided — do not invent it. */}
-          <p className="mt-4 text-sm text-ink-muted">
-            {t('contactPlaceholder')}
-          </p>
+          <nav className="mt-4 flex flex-col gap-3">
+            <a
+              href={WHATSAPP_CONTACT_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm text-ink hover:text-gold-deep"
+            >
+              <SocialIcon name="whatsapp" />
+              {tContact('whatsapp')}
+            </a>
+            <a
+              href={INSTAGRAM_PROFILE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm text-ink hover:text-gold-deep"
+            >
+              <SocialIcon name="instagram" />
+              {tContact('instagram')}
+            </a>
+          </nav>
           <div className="mt-6">
             <LanguageSwitcher />
           </div>

@@ -20,9 +20,6 @@
     "contactHeading": "تواصل معنا",
     "contactPlaceholder": "بيانات التواصل قريبًا."
   },
-  "placeholderPage": {
-    "comingSoon": "هذه الصفحة قريبًا."
-  },
   "orderConfirmation": {
     "title": "تم استلام الطلب",
     "body": "شكرًا لك — استلمت أورا تفاصيل طلبك.",
@@ -63,9 +60,7 @@
     "title": "تواصل معنا",
     "intro": "يسعدنا تواصلك مع أورا.",
     "instagram": "إنستغرام",
-    "instagramPlaceholder": "رابط الحساب غير متوفر — يُرجى إضافة الحساب الرسمي لأورا.",
-    "whatsapp": "واتساب",
-    "whatsappPlaceholder": "رقم التواصل غير متوفر — يُرجى إضافة رقم أورا الدولي."
+    "whatsapp": "واتساب"
   },
   "home": {
     "hero": {

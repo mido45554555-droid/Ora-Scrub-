@@ -20,9 +20,6 @@
     "contactHeading": "Contact",
     "contactPlaceholder": "Contact details coming soon."
   },
-  "placeholderPage": {
-    "comingSoon": "This page is coming soon."
-  },
   "orderConfirmation": {
     "title": "Order received",
     "body": "Thank you — ORA has received your order details.",
@@ -63,9 +60,7 @@
     "title": "Contact",
     "intro": "Get in touch with ORA.",
     "instagram": "Instagram",
-    "instagramPlaceholder": "Profile URL placeholder — replace with ORA’s official profile.",
-    "whatsapp": "WhatsApp",
-    "whatsappPlaceholder": "Phone number placeholder — replace with ORA’s international number."
+    "whatsapp": "WhatsApp"
   },
   "home": {
     "hero": {
