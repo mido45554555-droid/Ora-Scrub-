@@ -97,7 +97,20 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error('Order backend request failed:', error);
-    return errorResponse(502, 'UNAVAILABLE', 'Order submission is temporarily unavailable.');
+  console.error('Order backend request failed:', {
+    message: error instanceof Error ? error.message : String(error),
+    cause: error instanceof Error ? String(error.cause) : undefined,
+    stack: error instanceof Error ? error.stack : undefined,
+    backendUrl: (() => {
+      try {
+        return new URL(backendUrl).origin;
+      } catch {
+        return 'INVALID_URL';
+      }
+    })(),
+  });
+
+  return errorResponse(502, 'UNAVAILABLE', 'Order submission is temporarily unavailable.');
   }
 }
+
