@@ -31,7 +31,7 @@ const ORDER_STATUSES = {
   completed: 'مكتمل',
 };
 const MATERIAL_LABELS = {
-  rosaline: 'بروزالين',
+  rosaline: 'روزالين',
   angelica: 'أنجيليكا',
 };
 

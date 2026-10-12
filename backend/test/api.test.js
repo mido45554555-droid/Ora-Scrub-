@@ -634,8 +634,8 @@ describe('new-order email', () => {
       additional_details: 'N/A',
     };
     const email = buildOrderEmail(order, [], () => '');
-    assert.match(email.html, /بروزالين/);
-    assert.match(email.text, /بروزالين/);
+    assert.match(email.html, /روزالين/);
+    assert.match(email.text, /روزالين/);
     assert.match(email.text, /رقم الطلب في الدفعة: #3 من 10/);
     assert.match(email.text, /السبت، 10 أكتوبر 2026/);
     assert.match(email.html, /دفعة العمل/);
